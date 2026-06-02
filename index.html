@@ -83,17 +83,20 @@ body{
     height:100vh;
 }
 
-/* 左邊資訊欄 */
+/* 左側 */
 
 #sidebar{
     width:280px;
     background:rgba(255,255,255,0.92);
     backdrop-filter:blur(10px);
     border-right:3px solid rgba(255,255,255,0.5);
+
     padding:25px;
+
     display:flex;
     flex-direction:column;
     align-items:center;
+
     box-shadow:5px 0 20px rgba(0,0,0,0.08);
 }
 
@@ -142,12 +145,46 @@ body{
     font-weight:bold;
 }
 
+/* 不在這裡按鈕 */
+
+#notHereBtn{
+
+    margin-top:auto;
+
+    width:200px;
+    padding:16px;
+
+    border:none;
+    border-radius:18px;
+
+    font-size:22px;
+    font-weight:bold;
+
+    cursor:pointer;
+
+    background:
+    linear-gradient(135deg,#ff8fab,#ffb3c6);
+
+    color:white;
+
+    box-shadow:
+    0 6px 15px rgba(0,0,0,0.12);
+
+    transition:0.2s;
+}
+
+#notHereBtn:hover{
+
+    transform:scale(1.03);
+}
+
 /* 遊戲區 */
 
 #gameArea{
     flex:1;
     position:relative;
     overflow:hidden;
+
     background:
     linear-gradient(
         180deg,
@@ -169,6 +206,7 @@ body{
     font-size:58px;
     cursor:pointer;
     user-select:none;
+
     transition:
     transform 0.15s,
     filter 0.15s;
@@ -187,12 +225,15 @@ body{
 }
 
 @keyframes flash{
+
     0%{
         opacity:1;
     }
+
     50%{
         opacity:0.4;
     }
+
     100%{
         opacity:1;
     }
@@ -235,7 +276,9 @@ body{
 
 <div id="menu">
 
-    <div id="title">水果尋找遊戲</div>
+    <div id="title">
+        水果尋找遊戲
+    </div>
 
     <div id="subtitle">
         找出指定水果吧！
@@ -285,6 +328,10 @@ body{
             時間：60
         </div>
 
+        <button id="notHereBtn">
+            不在這裡喔
+        </button>
+
     </div>
 
     <!-- 遊戲區 -->
@@ -317,7 +364,7 @@ const fruits = [
 
 ];
 
-/* 物件 */
+/* 元件 */
 
 const menu = document.getElementById("menu");
 const game = document.getElementById("game");
@@ -330,13 +377,18 @@ const targetColor = document.getElementById("targetColor");
 const scoreText = document.getElementById("score");
 const timerText = document.getElementById("timer");
 
-/* 遊戲狀態 */
+/* 狀態 */
 
 let targetFruit;
+
 let score = 0;
 let time = 60;
+
 let timer;
+
 let blackWhiteMode = false;
+
+let currentFruits = [];
 
 /* 開始遊戲 */
 
@@ -345,22 +397,27 @@ function startGame(isBlackWhite){
     blackWhiteMode = isBlackWhite;
 
     menu.style.display = "none";
+
     game.style.display = "flex";
 
     if(blackWhiteMode){
+
         gameArea.classList.add("grayscale");
     }
 
     createFruits();
+
     chooseTarget();
 
     timer = setInterval(()=>{
 
         time--;
 
-        timerText.innerText = `時間：${time}`;
+        timerText.innerText =
+        `時間：${time}`;
 
         if(time <= 10){
+
             timerText.classList.add("warning");
         }
 
@@ -379,6 +436,7 @@ ${score}`
         }
 
     },1000);
+
 }
 
 /* 選目標 */
@@ -388,9 +446,14 @@ function chooseTarget(){
     targetFruit =
     fruits[Math.floor(Math.random()*fruits.length)];
 
-    targetImage.innerText = targetFruit.emoji;
-    targetName.innerText = targetFruit.name;
-    targetColor.innerText = targetFruit.color;
+    targetImage.innerText =
+    targetFruit.emoji;
+
+    targetName.innerText =
+    targetFruit.name;
+
+    targetColor.innerText =
+    targetFruit.color;
 }
 
 /* 生成水果 */
@@ -399,6 +462,8 @@ function createFruits(){
 
     gameArea.innerHTML = "";
 
+    currentFruits = [];
+
     const placed = [];
 
     for(let i=0;i<30;i++){
@@ -406,7 +471,10 @@ function createFruits(){
         const fruit =
         fruits[Math.floor(Math.random()*fruits.length)];
 
-        const div = document.createElement("div");
+        currentFruits.push(fruit.name);
+
+        const div =
+        document.createElement("div");
 
         div.classList.add("fruit");
 
@@ -444,9 +512,9 @@ function createFruits(){
                 if(distance < 75){
 
                     safe = false;
+
                     break;
                 }
-
             }
 
             tries++;
@@ -466,7 +534,7 @@ function createFruits(){
         div.style.transform =
         `rotate(${rotate}deg) scale(${scale})`;
 
-        /* 點擊 */
+        /* 點水果 */
 
         div.addEventListener("click",()=>{
 
@@ -478,6 +546,7 @@ function createFruits(){
                 `分數：${score}`;
 
                 createFruits();
+
                 chooseTarget();
 
             }else{
@@ -485,6 +554,7 @@ function createFruits(){
                 score--;
 
                 if(score < 0){
+
                     score = 0;
                 }
 
@@ -495,10 +565,47 @@ function createFruits(){
         });
 
         gameArea.appendChild(div);
+
     }
+
 }
 
-/* 按鈕 */
+/* 不在這裡按鈕 */
+
+document
+.getElementById("notHereBtn")
+.addEventListener("click",()=>{
+
+    const exists =
+    currentFruits.includes(targetFruit.name);
+
+    if(!exists){
+
+        score++;
+
+        alert("答對了！真的不在這裡！");
+
+    }else{
+
+        score--;
+
+        if(score < 0){
+            score = 0;
+        }
+
+        alert("其實有在畫面裡！");
+    }
+
+    scoreText.innerText =
+    `分數：${score}`;
+
+    createFruits();
+
+    chooseTarget();
+
+});
+
+/* 主頁按鈕 */
 
 document
 .getElementById("normalBtn")
@@ -520,237 +627,3 @@ document
 
 </body>
 </html>
-    #targetColor {
-        font-size: 24px;
-        text-align: center;
-        color: #666;
-    }
-
-    #score,
-    #timer {
-        margin-top: 30px;
-        font-size: 28px;
-        text-align: center;
-    }
-
-    /* 遊戲區 */
-    #gameArea {
-        flex: 1;
-        position: relative;
-        overflow: hidden;
-        background: #fafafa;
-    }
-
-    /* 黑白模式 */
-    .grayscale {
-        filter: grayscale(100%);
-    }
-
-    /* 水果 */
-    .fruit {
-        position: absolute;
-        font-size: 60px;
-        cursor: pointer;
-        user-select: none;
-        transition: transform 0.1s;
-    }
-
-    .fruit:hover {
-        transform: scale(1.1);
-    }
-</style>
-</head>
-
-<body>
-
-<!-- 主頁 -->
-<div id="menu">
-    <button class="mode-btn" id="normalBtn">普通</button>
-    <button class="mode-btn" id="bwBtn">黑白模式</button>
-</div>
-
-<!-- 遊戲 -->
-<div id="game">
-
-    <!-- 左側 -->
-    <div id="sidebar">
-        <div id="targetImage">🍎</div>
-        <div id="targetName">蘋果</div>
-        <div id="targetColor">紅的</div>
-
-        <div id="score">分數：0</div>
-        <div id="timer">時間：60</div>
-    </div>
-
-    <!-- 遊戲區 -->
-    <div id="gameArea"></div>
-
-</div>
-
-<script>
-
-const fruits = [
-    {
-        emoji: "🍎",
-        name: "蘋果",
-        color: "紅的"
-    },
-    {
-        emoji: "🍌",
-        name: "香蕉",
-        color: "黃的"
-    },
-    {
-        emoji: "🍇",
-        name: "葡萄",
-        color: "紫的"
-    },
-    {
-        emoji: "🍊",
-        name: "橘子",
-        color: "橘的"
-    },
-    {
-        emoji: "🍓",
-        name: "草莓",
-        color: "紅的"
-    }
-];
-
-const menu = document.getElementById("menu");
-const game = document.getElementById("game");
-const gameArea = document.getElementById("gameArea");
-
-const targetImage = document.getElementById("targetImage");
-const targetName = document.getElementById("targetName");
-const targetColor = document.getElementById("targetColor");
-
-const scoreText = document.getElementById("score");
-const timerText = document.getElementById("timer");
-
-let targetFruit;
-let score = 0;
-let time = 60;
-let timer;
-let blackWhiteMode = false;
-
-/* 開始遊戲 */
-function startGame(isBlackWhite) {
-
-    blackWhiteMode = isBlackWhite;
-
-    menu.style.display = "none";
-    game.style.display = "flex";
-
-    if (blackWhiteMode) {
-        gameArea.classList.add("grayscale");
-    }
-
-    createFruits();
-    chooseTarget();
-
-    timer = setInterval(() => {
-
-        time--;
-        timerText.innerText = `時間：${time}`;
-
-        if (time <= 0) {
-            clearInterval(timer);
-
-            alert(`遊戲結束！\n你的分數：${score}`);
-
-            location.reload();
-        }
-
-    }, 1000);
-}
-
-/* 隨機選目標 */
-function chooseTarget() {
-
-    targetFruit = fruits[Math.floor(Math.random() * fruits.length)];
-
-    targetImage.innerText = targetFruit.emoji;
-    targetName.innerText = targetFruit.name;
-    targetColor.innerText = targetFruit.color;
-}
-
-/* 生成水果 */
-function createFruits() {
-
-    const placed = [];
-
-    for (let i = 0; i < 25; i++) {
-
-        const fruit = fruits[Math.floor(Math.random() * fruits.length)];
-
-        const div = document.createElement("div");
-
-        div.classList.add("fruit");
-        div.innerText = fruit.emoji;
-
-        const size = 60;
-
-        let x, y;
-        let safe = false;
-        let tries = 0;
-
-        while (!safe && tries < 100) {
-
-            x = Math.random() * (gameArea.clientWidth - size);
-            y = Math.random() * (gameArea.clientHeight - size);
-
-            safe = true;
-
-            for (const p of placed) {
-
-                const dx = x - p.x;
-                const dy = y - p.y;
-
-                const distance = Math.sqrt(dx * dx + dy * dy);
-
-                if (distance < 70) {
-                    safe = false;
-                    break;
-                }
-            }
-
-            tries++;
-        }
-
-        placed.push({ x, y });
-
-        const rotate = Math.random() * 360;
-
-        div.style.left = `${x}px`;
-        div.style.top = `${y}px`;
-        div.style.transform = `rotate(${rotate}deg)`;
-
-        div.addEventListener("click", () => {
-
-            if (fruit.name === targetFruit.name) {
-
-                score++;
-                scoreText.innerText = `分數：${score}`;
-
-                gameArea.innerHTML = "";
-
-                createFruits();
-                chooseTarget();
-
-            } else {
-
-                score--;
-
-                if (score < 0) {
-                    score = 0;
-                }
-
-                scoreText.innerText = `分數：${score}`;
-            }
-
-        });
-
-        gameArea.appendChild(div);
-    }
-}
