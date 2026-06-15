@@ -64,17 +64,21 @@ z-index:999;
 }
 .warning{color:red;font-weight:bold}
 
-@media(max-width:900px){
-body{overflow:hidden}
-#game{flex-direction:column}
-#sidebar{
-width:100%;
-height:390px;
-flex:none;
-}
-#gameArea{
-height:calc(100vh - 390px);
-flex:none;
+@media (max-width:900px) and (orientation:portrait){
+
+    #game{
+        flex-direction:column;
+    }
+
+    #sidebar{
+        width:100%;
+        height:320px;
+    }
+
+    #gameArea{
+        height:calc(100vh - 320px);
+    }
+
 }
 .button-group{flex-direction:column}
 .fruit{font-size:42px}
@@ -163,8 +167,13 @@ function createFruits(){
 
   let x,y,safe=false,tries=0;
   while(!safe && tries<300){
-   x=Math.random()*(gameArea.clientWidth-80);
-   y=Math.random()*(gameArea.clientHeight-80);
+   const padding = 50;
+
+x = padding +
+Math.random()*(gameArea.clientWidth-padding*2);
+
+y = padding +
+Math.random()*(gameArea.clientHeight-padding*2);
    safe=true;
 
    for(const p of placed){
