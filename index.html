@@ -23,13 +23,13 @@ font-size:28px;cursor:pointer;color:white;
 }
 #normalBtn{background:#ffb347}
 #bwBtn{background:#666}
-#game{display:none;width:100vw;height:100vh;flex-direction:row} /* 確保預設是橫向排列 */
+#game{display:none;width:100vw;height:100vh;flex-direction:row}
 #sidebar{
 width:280px;padding:20px;background:rgba(255,255,255,.95);
 display:flex;flex-direction:column;align-items:center;gap:15px;
-position:relative; /* 新增：賦予相對定位 */
-z-index:10; /* 新增：提高層級，防止水果覆蓋 */
-box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+position:relative;
+z-index:10;
+box-shadow:2px 0 10px rgba(0,0,0,0.1);
 }
 #targetBox,.status-box{
 background:white;border-radius:18px;padding:15px;
@@ -54,7 +54,7 @@ position:absolute;
 font-size:56px;
 cursor:pointer;
 user-select:none;
-z-index:1; /* 新增：確保水果在遊戲區域內，但低於側邊欄 */
+z-index:1;
 }
 #message{
 position:fixed;
@@ -68,32 +68,31 @@ z-index:999;
 }
 .warning{color:red;font-weight:bold}
 
-/* 修正：合併與修正 RWD 語法錯誤 */
 @media (max-width:900px) and (orientation:portrait){
     #game{
-        flex-direction:column; /* 手機直向時上下排列 */
+        flex-direction:column;
     }
     #sidebar{
         width:100%;
         height:auto;
         padding:10px;
-        flex-direction:row; /* 手機版側邊欄元件橫排 */
+        flex-direction:row;
         justify-content:space-around;
         flex-wrap:wrap;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        box-shadow:0 2px 10px rgba(0,0,0,0.1);
     }
     #targetBox{
         display:flex;align-items:center;gap:10px;width:auto;padding:5px 15px;
     }
     #targetImage{font-size:35px}
     #targetName{font-size:20px}
-    #targetColor{display:none} /* 手機版隱藏顏色文字省空間 */
+    #targetColor{display:none}
     
     .status-box, #notHereBtn{
         width:auto;font-size:18px;margin:2px;padding:8px 15px;
     }
     #gameArea{
-        height:calc(100vh - 160px); /* 動態調整遊戲區高度 */
+        height:calc(100vh - 160px);
     }
     .button-group{flex-direction:column}
     .fruit{font-size:42px}
@@ -128,6 +127,7 @@ z-index:999;
 </div>
 
 <script>
+// 1. 宣告遊戲資料
 const fruits=[
 {emoji:"🍎",name:"蘋果",color:"紅色"},
 {emoji:"🍏",name:"青蘋果",color:"綠色"},
@@ -149,11 +149,20 @@ const fruits=[
 let score=0,time=60,targetFruit,currentFruits=[];
 let timer;
 
+// 2. 獲取 DOM 元素（移至最上方，防止無法綁定事件）
+const menu=document.getElementById("menu");
+const game=document.getElementById("game");
 const gameArea=document.getElementById("gameArea");
 const targetImage=document.getElementById("targetImage");
 const targetName=document.getElementById("targetName");
 const targetColor=document.getElementById("targetColor");
+const scoreEl=document.getElementById("score");
+const timerEl=document.getElementById("timer");
+const normalBtn=document.getElementById("normalBtn");
+const bwBtn=document.getElementById("bwBtn");
+const notHereBtn=document.getElementById("notHereBtn");
 
+// 3. 遊戲邏輯函式
 function showMsg(text){
  const m=document.getElementById("message");
  m.textContent=text;
@@ -187,11 +196,8 @@ function createFruits(){
   while(!safe && tries<300){
    const padding = 50;
 
-x = padding +
-Math.random()*(gameArea.clientWidth-padding*2);
-
-y = padding +
-Math.random()*(gameArea.clientHeight-padding*2);
+   x = padding + Math.random()*(gameArea.clientWidth-padding*2);
+   y = padding + Math.random()*(gameArea.clientHeight-padding*2);
    safe=true;
 
    for(const p of placed){
@@ -251,6 +257,7 @@ function startGame(gray){
  },1000);
 }
 
+// 4. 綁定按鍵事件
 normalBtn.onclick=()=>startGame(false);
 bwBtn.onclick=()=>startGame(true);
 
@@ -269,16 +276,7 @@ notHereBtn.onclick=()=>{
  createFruits();
  chooseTarget();
 };
-
-const scoreEl=document.getElementById("score");
-const timerEl=document.getElementById("timer");
-const menu=document.getElementById("menu");
-const game=document.getElementById("game");
-const normalBtn=document.getElementById("normalBtn");
-const bwBtn=document.getElementById("bwBtn");
-const notHereBtn=document.getElementById("notHereBtn");
 </script>
 </body>
 </html>
 
- 
