@@ -83,10 +83,11 @@ display:inline-block;
 transition: transform 0.1s ease;
 }
 
+/* 修正：將提示詞移到最外層網頁上方，絕對不會擋住水果 */
 #message{
-position:absolute;
-top:50%;left:50%;
-transform:translate(-50%, -50%);
+position:fixed;
+top:30px;left:50%;
+transform:translateX(-50%);
 background:rgba(255, 255, 255, 0.95);
 color: #333;
 font-size: 24px;
@@ -95,7 +96,7 @@ padding: 15px 30px;
 border-radius: 50px;
 box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 display:none;
-z-index:999;
+z-index:9999;
 pointer-events: none;
 }
 .warning{color:red;font-weight:bold}
@@ -138,9 +139,10 @@ pointer-events: none;
 </head>
 <body>
 
-<div id="game" style="position: relative;">
- <div id="message"></div>
- 
+<!-- 移至最外層，方便完美置中靠上顯示 -->
+<div id="message"></div>
+
+<div id="game">
  <div id="sidebar">
  <div id="targetBox">
  <div id="targetImage">🍎</div>
@@ -232,26 +234,20 @@ function createFruits() {
  const count = Math.max(12, cols * rows);
 
  let chosenFruits = [];
- 
- // 核心修正：設定 25% 的機率這一局「完全不出現正確答案」
  const willAppear = Math.random() > 0.25; 
 
- // 篩選出不包含正確答案的其他水果池
  const otherFruits = fruits.filter(f => f.name !== targetFruit.name);
 
  if (willAppear) {
-  // 75% 機率：放入唯一一個正確答案
   chosenFruits.push(targetFruit);
   currentFruits.push(targetFruit.name);
   
-  // 填滿剩下空間
   for (let i = 1; i < count; i++) {
    const f = otherFruits[Math.floor(Math.random() * otherFruits.length)];
    chosenFruits.push(f);
    currentFruits.push(f.name);
   }
  } else {
-  // 25% 機率：全部格子的空間都用其他水果填滿，場上絕對沒有正確答案
   for (let i = 0; i < count; i++) {
    const f = otherFruits[Math.floor(Math.random() * otherFruits.length)];
    chosenFruits.push(f);
@@ -335,16 +331,16 @@ function startGame(gray){
 normalBtn.onclick=()=>startGame(false);
 bwBtn.onclick=()=>startGame(true);
 
-// 核心修正：「不在這裡喔」按鈕的判定邏輯
+// 修正：移除「加/扣1分」的贅字
 notHereBtn.onclick=()=>{
  const exists=currentFruits.includes(targetFruit.name);
 
  if(!exists){
   score++;
-  showMsg("真的不在這裡！加1分！");
+  showMsg("真的不在這裡！");
  } else {
   score=Math.max(0,score-1);
-  showMsg("其實有喔！扣1分！");
+  showMsg("其實有喔！");
  }
 
  scoreEl.textContent="分數："+score;
