@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+         <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
@@ -24,13 +24,12 @@ font-size:28px;cursor:pointer;color:white;
 #normalBtn{background:#ffb347}
 #bwBtn{background:#666}
 
-/* 修正：重構容器結構，確保排版與遊戲區完全切開 */
 #game{display:none;width:100vw;height:100vh;flex-direction:row}
 #sidebar{
 width:280px;padding:20px;background:rgba(255,255,255,.95);
 display:flex;flex-direction:column;align-items:center;gap:15px;
 position:relative;
-z-index:99; /* 提高層級防止任何意外 */
+z-index:99;
 box-shadow:2px 0 10px rgba(0,0,0,0.1);
 }
 #targetBox,.status-box{
@@ -40,14 +39,12 @@ width:220px;text-align:center;
 }
 #targetImage{font-size:80px}
 #targetName{font-size:32px;font-weight:bold}
-#targetColor{color:#666}
 .status-box{font-size:24px}
 #notHereBtn{
 width:220px;padding:14px;border:none;border-radius:16px;
 background:#ff8fab;color:white;font-size:20px;cursor:pointer;
 }
 
-/* 修正：加強容器範圍限制 */
 #gameArea{
 flex:1;position:relative;overflow:hidden;
 background:rgba(255,255,255,.15);
@@ -56,28 +53,34 @@ contain: layout size;
 .grayscale{filter:grayscale(100%)}
 .fruit{
 position:absolute;
-font-size:52px; /* 微調大小，提升相容性 */
+font-size:50px; /* 微調大小確保不溢出 */
 cursor:pointer;
 user-select:none;
 z-index:5;
 line-height:1;
-width:60px;
-height:60px;
+width:55px;
+height:55px;
 display:flex;
 align-items:center;
 justify-content:center;
-/* 基準點強制錨定 */
 transform-origin: center center;
 }
+
+/* 修正：將提示詞移到畫面的「正中央」，不再擋住分數欄 */
 #message{
-position:fixed;
-top:15px;left:50%;
-transform:translateX(-50%);
-background:white;
-padding:10px 18px;
-border-radius:12px;
+position:absolute;
+top:50%;left:50%;
+transform:translate(-50%, -50%);
+background:rgba(255, 255, 255, 0.95);
+color: #333;
+font-size: 24px;
+font-weight: bold;
+padding: 15px 30px;
+border-radius: 50px;
+box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 display:none;
 z-index:999;
+pointer-events: none; /* 防止點擊到提示框 */
 }
 .warning{color:red;font-weight:bold}
 
@@ -99,7 +102,6 @@ z-index:999;
     }
     #targetImage{font-size:35px}
     #targetName{font-size:20px}
-    #targetColor{display:none}
     
     .status-box, #notHereBtn{
         width:auto;font-size:18px;margin:2px;padding:8px 15px;
@@ -109,9 +111,9 @@ z-index:999;
     }
     .button-group{flex-direction:column}
     .fruit{
-        font-size:38px;
-        width:45px;
-        height:45px;
+        font-size:36px;
+        width:40px;
+        height:40px;
     }
     #title{font-size:38px;text-align:center}
 }
@@ -119,7 +121,21 @@ z-index:999;
 </head>
 <body>
 
-<div id="message"></div>
+<div id="game" style="position: relative;">
+ <!-- 將 message 放到 game 容器內以實現完美的遊戲區正中央定位 -->
+ <div id="message"></div>
+ 
+ <div id="sidebar">
+ <div id="targetBox">
+ <div id="targetImage">🍎</div>
+ <div id="targetName">蘋果</div>
+ </div>
+ <div id="score" class="status-box">分數：0</div>
+ <div id="timer" class="status-box">時間：60</div>
+ <button id="notHereBtn">不在這裡喔</button>
+ </div>
+ <div id="gameArea"></div>
+</div>
 
 <div id="menu">
 <h1 id="title">水果尋找遊戲</h1>
@@ -129,37 +145,24 @@ z-index:999;
 </div>
 </div>
 
-<div id="game">
-<div id="sidebar">
-<div id="targetBox">
-<div id="targetImage">🍎</div>
-<div id="targetName">蘋果</div>
-<div id="targetColor">紅色</div>
-</div>
-<div id="score" class="status-box">分數：0</div>
-<div id="timer" class="status-box">時間：60</div>
-<button id="notHereBtn">不在這裡喔</button>
-</div>
-<div id="gameArea"></div>
-</div>
-
 <script>
+// 已刪除顏色提示詞資料
 const fruits=[
-{emoji:"🍎",name:"蘋果",color:"紅色"},
-{emoji:"🍏",name:"青蘋果",color:"綠色"},
-{emoji:"🍌",name:"香蕉",color:"黃色"},
-{emoji:"🍇",name:"葡萄",color:"紫色"},
-{emoji:"🍓",name:"草莓",color:"紅色"},
-{emoji:"🍒",name:"櫻桃",color:"紅色"},
-{emoji:"🍉",name:"西瓜",color:"綠色"},
-{emoji:"🍍",name:"鳳梨",color:"黃色"},
-{emoji:"🥝",name:"奇異果",color:"綠色"},
-{emoji:"🍑",name:"水蜜桃",color:"粉色"},
-{emoji:"🍊",name:"橘子",color:"橘色"},
-{emoji:"🍋",name:"檸檬",color:"黃色"},
-{emoji:"🥥",name:"椰子",color:"棕色"},
-{emoji:"🫐",name:"藍莓",color:"藍色"},
-{emoji:"🍐",name:"梨子",color:"黃綠色"}
+{emoji:"🍎",name:"蘋果"},
+{emoji:"🍏",name:"青蘋果"},
+{emoji:"🍌",name:"香蕉"},
+{emoji:"🍇",name:"葡萄"},
+{emoji:"🍓",name:"草莓"},
+{emoji:"🍒",name:"櫻桃"},
+{emoji:"🍉",name:"西瓜"},
+{emoji:"🍍",name:"鳳梨"},
+{emoji:"🥝",name:"奇異果"},
+{emoji:"🍑",name:"水蜜桃"},
+{emoji:"🍊",name:"橘子"},
+{emoji:"🍋",name:"檸檬"},
+{emoji:"🥥",name:"椰子"},
+{emoji:"🫐",name:"藍莓"},
+{emoji:"🍐",name:"梨子"}
 ];
 
 let score=0,time=60,targetFruit,currentFruits=[];
@@ -170,7 +173,6 @@ const game=document.getElementById("game");
 const gameArea=document.getElementById("gameArea");
 const targetImage=document.getElementById("targetImage");
 const targetName=document.getElementById("targetName");
-const targetColor=document.getElementById("targetColor");
 const scoreEl=document.getElementById("score");
 const timerEl=document.getElementById("timer");
 const normalBtn=document.getElementById("normalBtn");
@@ -181,14 +183,13 @@ function showMsg(text){
  const m=document.getElementById("message");
  m.textContent=text;
  m.style.display="block";
- setTimeout(()=>m.style.display="none",1200);
+ setTimeout(()=>m.style.display="none",1000);
 }
 
 function chooseTarget(){
  targetFruit=fruits[Math.floor(Math.random()*fruits.length)];
  targetImage.textContent=targetFruit.emoji;
  targetName.textContent=targetFruit.name;
- targetColor.textContent=targetFruit.color;
 }
 
 function createFruits() {
@@ -198,16 +199,17 @@ function createFruits() {
  const isMobile = window.innerWidth < 900;
  const count = isMobile ? 12 : 30;
 
- // 修正：強制使用更安全的容器內界寬高
  const areaWidth = gameArea.offsetWidth;
  const areaHeight = gameArea.offsetHeight;
 
- // 修正：依據物件大小，提供兩倍的絕對安全邊距（Padding）
- const fruitSize = isMobile ? 45 : 60;
- const minX = fruitSize;
- const minY = fruitSize;
- const maxX = areaWidth - fruitSize * 2;
- const maxY = areaHeight - fruitSize * 2;
+ // 優化：顯著加大邊距圍牆，徹底防範水果旋轉時邊緣出界
+ const paddingX = isMobile ? 50 : 80;
+ const paddingY = isMobile ? 50 : 80;
+ 
+ const minX = paddingX;
+ const minY = paddingY;
+ const maxX = areaWidth - paddingX;
+ const maxY = areaHeight - paddingY;
 
  const placed = [];
 
@@ -221,7 +223,6 @@ function createFruits() {
 
   let x, y, safe = false, tries = 0;
   while (!safe && tries < 300) {
-   // 修正：產生出的左上角坐標加上寬高後，絕對不會超過 maxX 與 maxY
    x = minX + Math.random() * (maxX - minX);
    y = minY + Math.random() * (maxY - minY);
    safe = true;
@@ -239,7 +240,6 @@ function createFruits() {
 
   div.style.left = x + "px";
   div.style.top = y + "px";
-  // 修正：移除平移偏移，單純靠精準的 maxX/maxY 圍牆保護水果邊緣
   div.style.transform = `rotate(${Math.random() * 360}deg)`;
 
   div.onclick = () => {
@@ -266,7 +266,6 @@ function startGame(gray){
 
  if(gray) gameArea.classList.add("grayscale");
 
- // 修正：確保在 DOM 排版完全就緒後（100ms）再灑水果
  setTimeout(() => {
   createFruits();
   chooseTarget();
