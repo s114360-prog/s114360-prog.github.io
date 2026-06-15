@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>水果尋找遊戲 v2</title>
+<style>
+*{box-sizing:border-box}
+body{
+margin:0;font-family:"Microsoft JhengHei",sans-serif;
+background:linear-gradient(135deg,#ffe7c7,#ffd6e7);
+overflow:hidden;
+}
+#menu{
+height:100vh;display:flex;flex-direction:column;
+justify-content:center;align-items:center;gap:20px;
+}
+#title{font-size:52px;color:#ff6b81}
+.button-group{display:flex;gap:20px}
+.mode-btn{
+width:220px;height:90px;border:none;border-radius:20px;
+font-size:28px;cursor:pointer;color:white;
+}
+#normalBtn{background:#ffb347}
+#bwBtn{background:#666}
+#game{display:none;width:100vw;height:100vh}
+#sidebar{
+width:280px;padding:20px;background:rgba(255,255,255,.95);
+display:flex;flex-direction:column;align-items:center;gap:15px;
+}
+#targetBox,.status-box{
+background:white;border-radius:18px;padding:15px;
+box-shadow:0 4px 10px rgba(0,0,0,.1);
+width:220px;text-align:center;
+}
+#targetImage{font-size:80px}
+#targetName{font-size:32px;font-weight:bold}
+#targetColor{color:#666}
+.status-box{font-size:24px}
+#notHereBtn{
+width:220px;padding:14px;border:none;border-radius:16px;
+background:#ff8fab;color:white;font-size:20px;cursor:pointer;
+}
+#gameArea{
+flex:1;position:relative;overflow:hidden;
+background:rgba(255,255,255,.15);
+}
+.grayscale{filter:grayscale(100%)}
+.fruit{
+position:absolute;
+font-size:56px;
+cursor:pointer;
+user-select:none;
+}
+#message{
+position:fixed;
+top:15px;left:50%;
+transform:translateX(-50%);
+background:white;
+padding:10px 18px;
+border-radius:12px;
+display:none;
+z-index:999;
+}
+.warning{color:red;font-weight:bold}
+
+@media(max-width:900px){
+body{overflow:hidden}
+#game{flex-direction:column}
+#sidebar{
+width:100%;
+height:390px;
+flex:none;
+}
+#gameArea{
+height:calc(100vh - 390px);
+flex:none;
+}
+.button-group{flex-direction:column}
+.fruit{font-size:42px}
+#title{font-size:38px;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<div id="message"></div>
+
+<div id="menu">
+<h1 id="title">水果尋找遊戲</h1>
+<div class="button-group">
+<button id="normalBtn" class="mode-btn">普通模式</button>
+<button id="bwBtn" class="mode-btn">黑白模式</button>
+</div>
+</div>
+
+<div id="game">
+<div id="sidebar">
+<div id="targetBox">
+<div id="targetImage">🍎</div>
+<div id="targetName">蘋果</div>
+<div id="targetColor">紅色</div>
+</div>
+<div id="score" class="status-box">分數：0</div>
+<div id="timer" class="status-box">時間：60</div>
+<button id="notHereBtn">不在這裡喔</button>
+</div>
+<div id="gameArea"></div>
+</div>
+
+<script>
+const fruits=[
+{emoji:"🍎",name:"蘋果",color:"紅色"},
+{emoji:"🍏",name:"青蘋果",color:"綠色"},
+{emoji:"🍌",name:"香蕉",color:"黃色"},
+{emoji:"🍇",name:"葡萄",color:"紫色"},
+{emoji:"🍓",name:"草莓",color:"紅色"},
+{emoji:"🍒",name:"櫻桃",color:"紅色"},
+{emoji:"🍉",name:"西瓜",color:"綠色"},
+{emoji:"🍍",name:"鳳梨",color:"黃色"},
+{emoji:"🥝",name:"奇異果",color:"綠色"},
+{emoji:"🍑",name:"水蜜桃",color:"粉色"},
+{emoji:"🍊",name:"橘子",color:"橘色"},
+{emoji:"🍋",name:"檸檬",color:"黃色"},
+{emoji:"🥥",name:"椰子",color:"棕色"},
+{emoji:"🫐",name:"藍莓",color:"藍色"},
+{emoji:"🍐",name:"梨子",color:"黃綠色"}
+];
+
+let score=0,time=60,targetFruit,currentFruits=[];
+let timer;
+
+const gameArea=document.getElementById("gameArea");
+
+function showMsg(text){
+ const m=document.getElementById("message");
+ m.textContent=text;
+ m.style.display="block";
+ setTimeout(()=>m.style.display="none",1200);
+}
+
+function chooseTarget(){
+ targetFruit=fruits[Math.floor(Math.random()*fruits.length)];
+ targetImage.textContent=targetFruit.emoji;
+ targetName.textContent=targetFruit.name;
+ targetColor.textContent=targetFruit.color;
+}
+
+function createFruits(){
+ gameArea.innerHTML="";
+ currentFruits=[];
+
+ const count=window.innerWidth<900?12:30;
+ const placed=[];
+
+ for(let i=0;i<count;i++){
+  const fruit=fruits[Math.floor(Math.random()*fruits.length)];
+  currentFruits.push(fruit.name);
+
+  const div=document.createElement("div");
+  div.className="fruit";
+  div.textContent=fruit.emoji;
+
+  let x,y,safe=false,tries=0;
+  while(!safe && tries<300){
+   x=Math.random()*(gameArea.clientWidth-80);
+   y=Math.random()*(gameArea.clientHeight-80);
+   safe=true;
+
+   for(const p of placed){
+    if(Math.hypot(x-p.x,y-p.y)<65){
+      safe=false; break;
+    }
+   }
+   tries++;
+  }
+
+  placed.push({x,y});
+
+  div.style.left=x+"px";
+  div.style.top=y+"px";
+  div.style.transform=`rotate(${Math.random()*360}deg)`;
+
+  div.onclick=()=>{
+   if(fruit.name===targetFruit.name){
+    score++;
+    scoreEl.textContent="分數："+score;
+    showMsg("答對！");
+    createFruits();
+    chooseTarget();
+   }else{
+    score=Math.max(0,score-1);
+    scoreEl.textContent="分數："+score;
+    showMsg("答錯！");
+   }
+  };
+
+  gameArea.appendChild(div);
+ }
+}
+
+function startGame(gray){
+ menu.style.display="none";
+ game.style.display="flex";
+
+ if(gray) gameArea.classList.add("grayscale");
+
+ createFruits();
+ chooseTarget();
+
+ timer=setInterval(()=>{
+  time--;
+  timerEl.textContent="時間："+time;
+
+  if(time<=10){
+   timerEl.classList.add("warning");
+  }
+
+  if(time<=0){
+   clearInterval(timer);
+   alert("遊戲結束！\\n最終分數："+score);
+   location.reload();
+  }
+ },1000);
+}
+
+normalBtn.onclick=()=>startGame(false);
+bwBtn.onclick=()=>startGame(true);
+
+notHereBtn.onclick=()=>{
+ const exists=currentFruits.includes(targetFruit.name);
+
+ if(!exists){
+  score++;
+  showMsg("真的不在這裡！");
+ }else{
+  score=Math.max(0,score-1);
+  showMsg("其實有喔！");
+ }
+
+ scoreEl.textContent="分數："+score;
+ createFruits();
+ chooseTarget();
+};
+
+const scoreEl=document.getElementById("score");
+const timerEl=document.getElementById("timer");
+</script>
+</body>
+</html>
