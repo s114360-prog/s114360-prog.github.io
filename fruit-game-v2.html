@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
-<title>水果尋找遊戲 v2</title>
+<title>水果尋找遊戲 v2 - 完整隱藏版</title>
 <style>
 *{box-sizing:border-box}
 body{
@@ -81,7 +81,6 @@ user-select:none;
 z-index:5;
 line-height:1;
 display:inline-block;
-transition: transform 0.1s ease;
 }
 
 #message{
@@ -101,240 +100,219 @@ pointer-events: none;
 }
 .warning{color:red;font-weight:bold}
 
-/* 隱藏內容相關 CSS */
-.hidden-item {
- position: absolute;
- font-size: 40px;
- cursor: pointer;
- z-index: 10;
- user-select: none;
+/* --- 隱藏內容物件樣式 --- */
+#menuPaper {
+position: absolute; left: 20px; bottom: 20px;
+font-size: 45px; cursor: pointer; display: none; z-index: 10;
 }
-#menuPaper { left: 20px; bottom: 20px; display: none; }
-#menuComputer { left: 20px; bottom: 85px; display: none; }
-
-#cornerFold {
- position: absolute;
- right: 0; bottom: 0;
- width: 0; height: 0;
- border-style: solid;
- border-width: 0 0 35px 35px;
- border-color: transparent transparent #b0b0b0 transparent;
- cursor: pointer;
- z-index: 100;
- display: none;
- transition: border-color 0.2s;
+#menuComputer {
+position: absolute; left: 80px; bottom: 20px;
+font-size: 45px; display: none; cursor: pointer; z-index: 10;
 }
-#cornerFold:hover {
- border-color: transparent transparent #ff6b81 transparent;
+#menuCorner {
+position: absolute; right: 0; bottom: 0;
+width: 40px; height: 40px;
+background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.15) 50%);
+cursor: pointer; display: none; z-index: 10;
 }
 
-/* 遮罩彈窗（用於放大紙張或電腦螢幕） */
-.overlay-screen {
- position: fixed;
- top:0; left:0; width:100vw; height:100vh;
- background: rgba(0,0,0,0.6);
- display: none;
- justify-content: center; align-items: center;
- z-index: 1000;
+/* 遮罩放大彈窗 */
+#overlay {
+position: fixed; top:0; left:0; width:100vw; height:100vh;
+background: rgba(0,0,0,0.5); display: none;
+justify-content: center; align-items: center; z-index: 1000;
 }
-.popup-box {
- background: white; border-radius: 20px;
- padding: 30px; text-align: center;
- box-shadow: 0 10px 25px rgba(0,0,0,0.3);
- max-width: 90%; width: 400px;
- position: relative;
+#popupBox {
+background: white; padding: 40px; border-radius: 20px;
+box-shadow: 0 4px 20px rgba(0,0,0,0.3); text-align: center;
+max-width: 80%; width: 400px;
 }
-#paperContent { font-size: 28px; font-weight: bold; color: #444; line-height: 1.6; }
-.close-btn {
- margin-top: 20px; padding: 8px 20px;
- border: none; border-radius: 10px;
- background: #ff6b81; color: white; cursor: pointer;
+#popupText { font-size: 26px; font-weight: bold; margin-bottom: 20px; color:#333; }
+.popup-btn {
+padding: 10px 25px; border: none; border-radius: 10px;
+background: #ff8fab; color: white; font-size: 18px; cursor: pointer;
 }
 
-/* 電腦畫面樣式 */
-#compScreen h3 { margin-top: 0; color: #333; }
-#compInput {
- width: 100%; padding: 10px; font-size: 18px;
- text-align: center; border: 2px solid #ddd;
- border-radius: 10px; margin: 15px 0;
+/* 劇情對話框樣式 */
+#storyContainer {
+position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+background: rgba(0,0,0,0.3); display: none;
+justify-content: center; align-items: center; z-index: 2000;
 }
-.comp-btn-group { display: flex; gap: 10px; justify-content: center; }
-.comp-btn {
- padding: 10px 20px; border: none; border-radius: 10px;
- color: white; cursor: pointer; font-size: 16px;
+#dialogueBox {
+width: 450px; max-width: 90%; padding: 30px; border-radius: 20px;
+box-shadow: 0 10px 25px rgba(0,0,0,0.2); font-size: 20px;
+font-weight: bold; position: relative; cursor: pointer;
+animation: popIn 0.3s ease;
 }
-#submitPwd { background: #4caf50; }
-#dontKnowPwd { background: #9e9e9e; }
+@keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-/* 資料夾與文件系統 */
-#systemFolder { display: none; text-align: center; }
-.folder-icon { font-size: 64px; cursor: pointer; display: inline-block; margin-bottom: 10px; }
-#fileContainer { display: none; margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 15px; }
-.file-item {
- display: inline-block; padding: 15px; border-radius: 10px;
- background: #f5f5f5; border: 1px dashed #bbb;
- cursor: pointer; user-select: none;
-}
-.file-icon { font-size: 48px; }
-.file-tips { font-size: 12px; color: #888; margin-top: 5px; }
+/* 不同角色的對話框風格 */
+.box-black { background: #222; color: #fff; border: 3px solid #444; }
+.box-orange { background: #fffae8; color: #d35400; border: 3px solid #ffb347; margin-top: 40px; }
+.box-white { background: #fff; color: #333; border: 3px solid #ccc; text-align: center; }
 
-/* 劇情對話框系統 */
-#storyOverlay {
- position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
- background: transparent; display: none; z-index: 2000;
-}
-.dialogue-bubble {
- position: absolute; bottom: 40px; left: 50%;
- transform: translateX(-50%); width: 85%; max-width: 600px;
- padding: 25px; border-radius: 20px; font-size: 20px;
- font-weight: bold; line-height: 1.5;
- box-shadow: 0 6px 20px rgba(0,0,0,0.15);
- cursor: pointer; animation: dialogPop 0.2s ease-out;
-}
-@keyframes dialogPop { from{transform: translateX(-50%) scale(0.95); opacity:0;} to{transform: translateX(-50%) scale(1); opacity:1;} }
+#dialogueName { font-size: 16px; margin-bottom: 8px; opacity: 0.8; }
+#dialogueText { line-height: 1.5; min-height: 60px; }
+#dialogueHint { font-size: 12px; text-align: right; opacity: 0.5; margin-top: 10px; }
 
-/* 三種角色的對話框顏色樣式 */
-.bubble-game { background: #222; color: #fff; border: 3px solid #444; }
-.bubble-player { background: #ff9800; color: #fff; border: 3px solid #e65100; }
-.bubble-author { background: #fff; color: #222; border: 3px solid #000; }
+/* 劇情選項群組 */
+.options-group { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
+.option-btn {
+padding: 8px 20px; border: none; border-radius: 10px;
+font-size: 16px; font-weight: bold; cursor: pointer;
+}
+.opt-orange { background: #ffb347; color: white; }
+.opt-gray { background: #bbb; color: white; }
 
-.bubble-name { font-size: 14px; opacity: 0.8; margin-bottom: 5px; text-decoration: underline; }
-.click-hint { font-size: 12px; text-align: right; opacity: 0.6; margin-top: 10px; }
+/* 電腦輸入介面 */
+#computerInputBox { display: none; flex-direction: column; gap: 15px; margin-top: 15px; }
+#pcInput { padding: 10px; font-size: 18px; text-align: center; border-radius: 8px; border: 2px solid #ccc; }
 
-/* 抉擇按鈕組 */
-.choice-group { display: flex; gap: 15px; justify-content: center; margin-top: 15px; }
-.choice-btn {
- padding: 10px 25px; border: none; border-radius: 12px;
- font-size: 18px; font-weight: bold; cursor: pointer; color: white;
-}
-.btn-yes { background: #4caf50; }
-.btn-no { background: #f44336; }
+/* 資料夾刪除介面 */
+#folderBox { display: none; flex-direction: column; align-items: center; gap: 15px; }
+#fileIcon { font-size: 60px; cursor: pointer; user-select: none; transition: transform 0.2s; }
+#fileIcon:active { transform: scale(0.9); }
 
-/* 晃動與黑畫面加載特效 */
-.shake-effect { animation: screenShake 0.1s infinite; }
-@keyframes screenShake {
- 0% { transform: translate(2px, 1px) rotate(0deg); }
- 10% { transform: translate(-1px, -2px) rotate(-1deg); }
- 20% { transform: translate(-3px, 0px) rotate(1deg); }
- 30% { transform: translate(0px, 2px) rotate(0deg); }
- 40% { transform: translate(1px, -1px) rotate(1deg); }
- 50% { transform: translate(-1px, 2px) rotate(-1deg); }
- 60% { transform: translate(-3px, 1px) rotate(0deg); }
- 70% { transform: translate(2px, 1px) rotate(-1deg); }
- 80% { transform: translate(-1px, -1px) rotate(1deg); }
- 90% { transform: translate(2px, 2px) rotate(0deg); }
- 100% { transform: translate(1px, -2px) rotate(-1deg); }
+/* 黑畫面與載入條 */
+#blackScreen {
+position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+background: black; display: none; flex-direction: column;
+justify-content: center; align-items: center; z-index: 3000;
 }
-#blackoutScreen {
- position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
- background: black; display: none; z-index: 3000;
- flex-direction: column; justify-content: center; align-items: center;
- color: white; font-family: monospace;
+#loadingBarContainer {
+width: 250px; height: 15px; background: #333;
+border-radius: 10px; overflow: hidden; margin-top: 20px; display: none;
 }
-.progress-bar-container {
- width: 250px; height: 20px; border: 2px solid white;
- border-radius: 10px; overflow: hidden; margin-top: 20px;
-}
-#progressBar { width: 0%; height: 100%; background: #4caf50; transition: width 0.05s linear; }
+#loadingBar { width: 0%; height: 100%; background: #4cd137; transition: width 0.1s linear; }
+#blackText { color: white; font-size: 22px; font-weight: bold; }
 
 @media (max-width:900px) and (orientation:portrait){
     #game{ flex-direction:column; }
-    #sidebar{
-        width:100%; height:auto; padding:10px;
-        flex-direction:row; justify-content:space-around; flex-wrap:wrap;
-        box-shadow:0 2px 10px rgba(0,0,0,0.1);
-    }
+    #sidebar{ width:100%; height:auto; padding:10px; flex-direction:row; justify-content:space-around; flex-wrap:wrap; }
     #targetBox{ display:flex; align-items:center; gap:10px; width:auto; padding:5px 15px; }
-    #targetImage{font-size:35px}
-    #targetName{font-size:20px}
+    #targetImage{ font-size:35px }
+    #targetName{ font-size:20px }
     .status-box, #notHereBtn{ width:auto; font-size:18px; margin:2px; padding:8px 15px; }
     #gameArea{ height: calc(100vh - 160px); height: calc(100dvh - 160px); gap: 1px; padding: 10px 10px 45px 10px; }
-    .button-group{flex-direction:column}
+    .button-group{ flex-direction:column; }
     .fruit{ font-size:28px; }
-    #title{font-size:38px;text-align:center}
+    #title{ font-size:38px; text-align:center; }
 }
 </style>
 </head>
-<body>
+<body style="position: relative;">
 
 <div id="message"></div>
 
-<!-- 主選單頁面 -->
-<div id="menu">
- <h1 id="title">水果尋找遊戲</h1>
- <div class="button-group">
-  <button id="normalBtn" class="mode-btn">普通模式</button>
-  <button id="bwBtn" class="mode-btn">黑白模式</button>
- </div>
- <!-- 隱藏內容物件 -->
- <div id="menuPaper" class="hidden-item">📄</div>
- <div id="menuComputer" class="hidden-item">💻</div>
- <div id="cornerFold"></div>
-</div>
-
-<!-- 遊戲遊玩頁面 -->
+<!-- 遊戲主界面 -->
 <div id="game">
  <div id="sidebar">
-  <div id="targetBox">
-   <div id="targetImage">🍎</div>
-   <div id="targetName">蘋果</div>
-  </div>
-  <div id="score" class="status-box">分數：0</div>
-  <div id="timer" class="status-box">時間：60</div>
-  <button id="notHereBtn">不在這裡喔</button>
+ <div id="targetBox">
+ <div id="targetImage">🍎</div>
+ <div id="targetName">蘋果</div>
+ </div>
+ <div id="score" class="status-box">分數：0</div>
+ <div id="timer" class="status-box">時間：60</div>
+ <button id="notHereBtn">不在這裡喔</button>
  </div>
  <div id="gameArea"></div>
 </div>
 
-<!-- 彈出放大視窗 -->
-<div id="screenOverlay" class="overlay-screen">
- <div class="popup-box">
-  <div id="paperContent">右下角，點擊右下角（摺痕）</div>
-  <div id="compScreen" style="display:none;">
-   <h3>校園終端主機系統</h3>
-   <div id="loginForm">
-    <p>請輸入管理員解鎖密碼：</p>
-    <input type="password" id="compInput" placeholder="密碼為4位數字" maxlength="8">
-    <div class="comp-btn-group">
-     <button id="submitPwd" class="comp-btn">確認解鎖</button>
-     <button id="dontKnowPwd" class="comp-btn">不知道</button>
-    </div>
-   </div>
-   <div id="systemFolder">
-    <span class="folder-icon" id="folderBtn">📁</span>
-    <p>專案備份資料夾</p>
-    <div id="fileContainer">
-     <div id="projectFile" class="file-item">
-      <div class="file-icon">📄</div>
-      <div>期末作業_水果尋找遊戲_最終產出.js</div>
-      <div class="file-tips">（長按文件可將其刪除）</div>
-     </div>
-    </div>
-   </div>
+<!-- 開始選單界面 -->
+<div id="menu">
+ <h1 id="title">水果尋找遊戲</h1>
+ <div class="button-group">
+ <button id="normalBtn" class="mode-btn">普通模式</button>
+ <button id="bwBtn" class="mode-btn">黑白模式</button>
+ </div>
+ <!-- 隱藏要素觸發後在主頁生成的物件 -->
+ <div id="menuPaper">📄</div>
+ <div id="menuComputer">💻</div>
+ <div id="menuCorner"></div>
+</div>
+
+<!-- 彈出放大顯示層 -->
+<div id="overlay">
+ <div id="popupBox">
+  <div id="popupText">紙上寫著：右下角</div>
+  <button class="popup-btn" onclick="closeOverlay()">關閉</button>
+ </div>
+</div>
+
+<!-- 隱藏劇情文字大層 -->
+<div id="storyContainer">
+ <div id="dialogueBox" class="box-black">
+  <div id="dialogueName">遊戲</div>
+  <div id="dialogueText">內容載入中...</div>
+  
+  <!-- 分支選擇按鈕群 -->
+  <div id="choiceContainer" class="options-group"></div>
+  
+  <!-- 電腦密碼輸入介面 -->
+  <div id="computerInputBox">
+   <input type="text" id="pcInput" placeholder="請輸入密碼" maxlength="6">
+   <button class="option-btn opt-orange" onclick="checkPassword()">確定</button>
   </div>
-  <button id="closePopup" class="close-btn">關閉</button>
+  
+  <!-- 檔案刪除操作介面 -->
+  <div id="folderBox">
+   <div style="font-size:14px;color:#aaa;">【請長按下方文件圖示進行刪除】</div>
+   <div id="fileIcon">📄</div>
+  </div>
+
+  <div id="dialogueHint">點擊任意空白處繼續...</div>
  </div>
 </div>
 
-<!-- 劇情感應遮罩與對話框 -->
-<div id="storyOverlay">
- <div id="dialogueBubble" class="dialogue-bubble">
-  <div id="bubbleName" class="bubble-name">角色</div>
-  <div id="bubbleText">對話內容</div>
-  <div id="choiceContainer"></div>
-  <div id="clickHint" class="click-hint">▼ 點擊畫面繼續</div>
- </div>
-</div>
-
-<!-- 黑畫面加載特效 -->
-<div id="blackoutScreen">
- <div id="blackoutText">正在重組專案代碼...</div>
- <div class="progress-bar-container">
-  <div id="progressBar"></div>
+<!-- 黑畫面與加載進度條 -->
+<div id="blackScreen">
+ <div id="blackText"></div>
+ <div id="loadingBarContainer">
+  <div id="loadingBar"></div>
  </div>
 </div>
 
 <script>
-// 1. 基礎遊戲資料與常數宣告
 const fruits=[
- {emoji:"🍎",name:"蘋果"}, {emoji:"🍏",name:"青蘋果"}, {emoji:"🍌",name:"香蕉"},
+{emoji:"🍎",name:"蘋果"},{emoji:"🍏",name:"青蘋果"},{emoji:"🍌",name:"香蕉"},
+{emoji:"🍇",name:"葡萄"},{emoji:"🍓",name:"草莓"},{emoji:"🍒",name:"櫻桃"},
+{emoji:"🍉",name:"西瓜"},{emoji:"🍍",name:"鳳梨"},{emoji:"🥝",name:"奇異果"},
+{emoji:"🍑",name:"水蜜桃"},{emoji:"🍊",name:"橘子"},{emoji:"🍋",name:"檸檬"},
+{emoji:"🥥",name:"椰子"},{emoji:"🫐",name:"藍莓"},{emoji:"🍐",name:"梨子"}
+];
+
+let score=0,time=60,targetFruit,currentFruits=[];
+let timer;
+let isPaperSpawnedInThisGame = false; 
+let triggerSecretTransition = false;  
+
+// DOM 元素取得
+const menu=document.getElementById("menu");
+const game=document.getElementById("game");
+const gameArea=document.getElementById("gameArea");
+const targetImage=document.getElementById("targetImage");
+const targetName=document.getElementById("targetName");
+const scoreEl=document.getElementById("score");
+const timerEl=document.getElementById("timer");
+const normalBtn=document.getElementById("normalBtn");
+const bwBtn=document.getElementById("bwBtn");
+const notHereBtn=document.getElementById("notHereBtn");
+
+const menuPaper = document.getElementById("menuPaper");
+const menuComputer = document.getElementById("menuComputer");
+const menuCorner = document.getElementById("menuCorner");
+const overlay = document.getElementById("overlay");
+const popupText = document.getElementById("popupText");
+
+const storyContainer = document.getElementById("storyContainer");
+const dialogueBox = document.getElementById("dialogueBox");
+const dialogueName = document.getElementById("dialogueName");
+const dialogueText = document.getElementById("dialogueText");
+const dialogueHint = document.getElementById("dialogueHint");
+const choiceContainer = document.getElementById("choiceContainer");
+const computerInputBox = document.getElementById("computerInputBox");
+const folderBox = document.getElementById("folderBox");
+const fileIcon = document.getElementById("fileIcon");
+
+const blackScreen = document.getElementById("blackScreen");
