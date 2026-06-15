@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
 <title>水果尋找遊戲 v2</title>
 <style>
 *{box-sizing:border-box}
@@ -23,12 +23,14 @@ font-size:28px;cursor:pointer;color:white;
 }
 #normalBtn{background:#ffb347}
 #bwBtn{background:#666}
+
+/* 修正：重構容器結構，確保排版與遊戲區完全切開 */
 #game{display:none;width:100vw;height:100vh;flex-direction:row}
 #sidebar{
 width:280px;padding:20px;background:rgba(255,255,255,.95);
 display:flex;flex-direction:column;align-items:center;gap:15px;
 position:relative;
-z-index:10;
+z-index:99; /* 提高層級防止任何意外 */
 box-shadow:2px 0 10px rgba(0,0,0,0.1);
 }
 #targetBox,.status-box{
@@ -44,18 +46,27 @@ width:220px;text-align:center;
 width:220px;padding:14px;border:none;border-radius:16px;
 background:#ff8fab;color:white;font-size:20px;cursor:pointer;
 }
+
+/* 修正：加強容器範圍限制 */
 #gameArea{
 flex:1;position:relative;overflow:hidden;
 background:rgba(255,255,255,.15);
+contain: layout size;
 }
 .grayscale{filter:grayscale(100%)}
 .fruit{
 position:absolute;
-font-size:56px;
+font-size:52px; /* 微調大小，提升相容性 */
 cursor:pointer;
 user-select:none;
-z-index:1;
-/* 使用 transform 偏移植中，比負 margin 更能精準應對旋轉 */
+z-index:5;
+line-height:1;
+width:60px;
+height:60px;
+display:flex;
+align-items:center;
+justify-content:center;
+/* 基準點強制錨定 */
 transform-origin: center center;
 }
 #message{
@@ -98,7 +109,9 @@ z-index:999;
     }
     .button-group{flex-direction:column}
     .fruit{
-        font-size:42px;
+        font-size:38px;
+        width:45px;
+        height:45px;
     }
     #title{font-size:38px;text-align:center}
 }
@@ -178,61 +191,67 @@ function chooseTarget(){
  targetColor.textContent=targetFruit.color;
 }
 
-function createFruits(){
- gameArea.innerHTML="";
- currentFruits=[];
+function createFruits() {
+ gameArea.innerHTML = "";
+ currentFruits = [];
 
  const isMobile = window.innerWidth < 900;
  const count = isMobile ? 12 : 30;
- 
- // 1. 直接取得目前遊戲區域最精準的實際渲染寬高
- const areaWidth = gameArea.getBoundingClientRect().width || gameArea.clientWidth;
- const areaHeight = gameArea.getBoundingClientRect().height || gameArea.clientHeight;
 
- // 2. 加大安全內邊距，徹底保留水果旋轉與寬高空間
- const padding = isMobile ? 45 : 60; 
- const placed=[];
+ // 修正：強制使用更安全的容器內界寬高
+ const areaWidth = gameArea.offsetWidth;
+ const areaHeight = gameArea.offsetHeight;
 
- for(let i=0;i<count;i++){
-  const fruit=fruits[Math.floor(Math.random()*fruits.length)];
+ // 修正：依據物件大小，提供兩倍的絕對安全邊距（Padding）
+ const fruitSize = isMobile ? 45 : 60;
+ const minX = fruitSize;
+ const minY = fruitSize;
+ const maxX = areaWidth - fruitSize * 2;
+ const maxY = areaHeight - fruitSize * 2;
+
+ const placed = [];
+
+ for (let i = 0; i < count; i++) {
+  const fruit = fruits[Math.floor(Math.random() * fruits.length)];
   currentFruits.push(fruit.name);
 
-  const div=document.createElement("div");
-  div.className="fruit";
-  div.textContent=fruit.emoji;
+  const div = document.createElement("div");
+  div.className = "fruit";
+  div.textContent = fruit.emoji;
 
-  let x,y,safe=false,tries=0;
-  while(!safe && tries<300){
-   // 3. 確保中心點產生在扣除加大邊距後的安全矩形內
-   x = padding + Math.random() * (areaWidth - padding * 2);
-   y = padding + Math.random() * (areaHeight - padding * 2);
-   safe=true;
+  let x, y, safe = false, tries = 0;
+  while (!safe && tries < 300) {
+   // 修正：產生出的左上角坐標加上寬高後，絕對不會超過 maxX 與 maxY
+   x = minX + Math.random() * (maxX - minX);
+   y = minY + Math.random() * (maxY - minY);
+   safe = true;
 
-   for(const p of placed){
-    if(Math.hypot(x-p.x,y-p.y)<65){
-      safe=false; break;
+   for (const p of placed) {
+    if (Math.hypot(x - p.x, y - p.y) < 65) {
+     safe = false;
+     break;
     }
    }
    tries++;
   }
 
-  placed.push({x,y});
+  placed.push({ x, y });
 
-  div.style.left=x+"px";
-  div.style.top=y+"px";
-  // 4. 改用 translate(-50%, -50%) 來做中心對齊，不論怎麼 rotate 都不會位移或超出邊界
-  div.style.transform=`translate(-50%, -50%) rotate(${Math.random()*360}deg)`;
+  div.style.left = x + "px";
+  div.style.top = y + "px";
+  // 修正：移除平移偏移，單純靠精準的 maxX/maxY 圍牆保護水果邊緣
+  div.style.transform = `rotate(${Math.random() * 360}deg)`;
 
-  div.onclick=()=>{
-   if(fruit.name===targetFruit.name){
+  div.onclick = () => {
+   if (fruit.name === targetFruit.name) {
     score++;
-    scoreEl.textContent="分數："+score;
+    scoreEl.textContent = "分數：" + score;
     showMsg("答對！");
     createFruits();
     chooseTarget();
-   }else{
-    score=Math.max(0,score-1);
-    scoreEl.textContent="分數："+score;
+   } else {
+    score = Math.max(0, score - 1);
+    scoreEl.textContent = "分數：" + score;
     showMsg("答錯！");
    }
   };
@@ -247,11 +266,11 @@ function startGame(gray){
 
  if(gray) gameArea.classList.add("grayscale");
 
- // 5. 稍微延遲 50 毫秒產生水果，確保瀏覽器已經渲染完排版、寬高不是 0
+ // 修正：確保在 DOM 排版完全就緒後（100ms）再灑水果
  setTimeout(() => {
   createFruits();
   chooseTarget();
- }, 50);
+ }, 100);
 
  timer=setInterval(()=>{
   time--;
