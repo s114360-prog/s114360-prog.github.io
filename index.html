@@ -55,10 +55,8 @@ font-size:56px;
 cursor:pointer;
 user-select:none;
 z-index:1;
-/* 新增：將定位點設在水果中心，方便精準計算邊距與旋轉基準 */
+/* 使用 transform 偏移植中，比負 margin 更能精準應對旋轉 */
 transform-origin: center center;
-margin-left: -28px; 
-margin-top: -28px;
 }
 #message{
 position:fixed;
@@ -101,8 +99,6 @@ z-index:999;
     .button-group{flex-direction:column}
     .fruit{
         font-size:42px;
-        margin-left: -21px;
-        margin-top: -21px;
     }
     #title{font-size:38px;text-align:center}
 }
@@ -188,8 +184,13 @@ function createFruits(){
 
  const isMobile = window.innerWidth < 900;
  const count = isMobile ? 12 : 30;
- // 修正：依據水果大小（56px / 42px）設定精準的安全內邊距（半徑 + 旋轉緩衝）
- const padding = isMobile ? 35 : 45; 
+ 
+ // 1. 直接取得目前遊戲區域最精準的實際渲染寬高
+ const areaWidth = gameArea.getBoundingClientRect().width || gameArea.clientWidth;
+ const areaHeight = gameArea.getBoundingClientRect().height || gameArea.clientHeight;
+
+ // 2. 加大安全內邊距，徹底保留水果旋轉與寬高空間
+ const padding = isMobile ? 45 : 60; 
  const placed=[];
 
  for(let i=0;i<count;i++){
@@ -202,13 +203,12 @@ function createFruits(){
 
   let x,y,safe=false,tries=0;
   while(!safe && tries<300){
-   // 修正：確保生成的中心點絕對不會讓圖案邊緣超出 gameArea
-   x = padding + Math.random() * (gameArea.clientWidth - padding * 2);
-   y = padding + Math.random() * (gameArea.clientHeight - padding * 2);
+   // 3. 確保中心點產生在扣除加大邊距後的安全矩形內
+   x = padding + Math.random() * (areaWidth - padding * 2);
+   y = padding + Math.random() * (areaHeight - padding * 2);
    safe=true;
 
    for(const p of placed){
-    // 檢查水果之間是否重疊過深
     if(Math.hypot(x-p.x,y-p.y)<65){
       safe=false; break;
     }
@@ -220,7 +220,8 @@ function createFruits(){
 
   div.style.left=x+"px";
   div.style.top=y+"px";
-  div.style.transform=`rotate(${Math.random()*360}deg)`;
+  // 4. 改用 translate(-50%, -50%) 來做中心對齊，不論怎麼 rotate 都不會位移或超出邊界
+  div.style.transform=`translate(-50%, -50%) rotate(${Math.random()*360}deg)`;
 
   div.onclick=()=>{
    if(fruit.name===targetFruit.name){
@@ -246,8 +247,11 @@ function startGame(gray){
 
  if(gray) gameArea.classList.add("grayscale");
 
- createFruits();
- chooseTarget();
+ // 5. 稍微延遲 50 毫秒產生水果，確保瀏覽器已經渲染完排版、寬高不是 0
+ setTimeout(() => {
+  createFruits();
+  chooseTarget();
+ }, 50);
 
  timer=setInterval(()=>{
   time--;
