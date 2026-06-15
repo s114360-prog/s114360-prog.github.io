@@ -45,30 +45,38 @@ width:220px;padding:14px;border:none;border-radius:16px;
 background:#ff8fab;color:white;font-size:20px;cursor:pointer;
 }
 
-/* 關鍵修正：透過 CSS padding 建立硬性護城河，阻止任何子元素貼邊 */
+/* 終極修正：將遊戲區改為 Grid 彈性網格佈局，徹底消除絕對定位的溢出漏洞 */
 #gameArea{
-flex:1;position:relative;overflow:hidden;
+flex:1;
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+grid-auto-rows: minmax(85px, 1fr);
+gap: 15px;
+padding: 25px;
+overflow: hidden;
 background:rgba(255,255,255,.15);
-padding: 60px; /* 電腦版四周留出 60px 絕對安全禁區 */
-box-sizing: border-box;
-contain: layout size;
+align-content: center;
+justify-content: center;
 }
 .grayscale{filter:grayscale(100%)}
 
-/* 關鍵修正：縮小物件的實際寬高碰撞箱，確保文字不會因旋轉溢出 */
+/* 終極修正：水果在網格單元格內完美居中，不再有任何貼邊裁切可能 */
+.fruit-slot{
+display: flex;
+align-items: center;
+justify-content: center;
+width: 100%;
+height: 100%;
+overflow: visible;
+}
 .fruit{
-position:absolute;
-font-size:46px; /* 稍微縮小字型，優化可視度 */
+font-size:48px;
 cursor:pointer;
 user-select:none;
 z-index:5;
 line-height:1;
-width:50px;
-height:50px;
-display:flex;
-align-items:center;
-justify-content:center;
-transform-origin: center center;
+display:inline-block;
+transition: transform 0.1s ease;
 }
 
 #message{
@@ -110,16 +118,16 @@ pointer-events: none;
     .status-box, #notHereBtn{
         width:auto;font-size:18px;margin:2px;padding:8px 15px;
     }
-    /* 關鍵修正：手機直向時，留出 40px 的安全禁區 */
     #gameArea{
         height:calc(100vh - 160px);
-        padding: 40px; 
+        grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+        grid-auto-rows: minmax(65px, 1fr);
+        gap: 10px;
+        padding: 15px;
     }
     .button-group{flex-direction:column}
     .fruit{
-        font-size:32px;
-        width:36px;
-        height:36px;
+        font-size:36px;
     }
     #title{font-size:38px;text-align:center}
 }
@@ -201,48 +209,49 @@ function createFruits() {
  currentFruits = [];
 
  const isMobile = window.innerWidth < 900;
- const count = isMobile ? 12 : 30;
+ // 依據網格容量自動調整總生成數量，手機 12 個，電腦 28 個
+ const count = isMobile ? 12 : 28;
 
- // 關鍵修正：使用 clientWidth 獲取自動扣除 CSS padding 之後的「真實純白安全遊戲區」寬高
- const validWidth = gameArea.clientWidth;
- const validHeight = gameArea.clientHeight;
-
- // 關鍵修正：計算出水果內部渲染所需的寬高邊距，不與外圍 padding 重疊
- const fruitWidth = isMobile ? 36 : 50;
- const fruitHeight = isMobile ? 36 : 50;
-
- const placed = [];
-
+ // 1. 先抽取本次要產生的隨機水果陣列
+ let chosenFruits = [];
  for (let i = 0; i < count; i++) {
-  const fruit = fruits[Math.floor(Math.random() * fruits.length)];
-  currentFruits.push(fruit.name);
+  const f = fruits[Math.floor(Math.random() * fruits.length)];
+  chosenFruits.push(f);
+  currentFruits.push(f.name);
+ }
+
+ // 2. 終極修正：利用網格座位。建立與水果數量相等的「空位格子數」
+ let slots = Array.from({length: count}, (_, i) => i);
+ 
+ // 3. 將這些位置隨機打亂（洗牌演算法）
+ for (let i = slots.length - 1; i > 0; i--) {
+  const j = Math.floor(Math.random() * (i + 1));
+  [slots[i], slots[j]] = [slots[j], slots[i]];
+ }
+
+ // 4. 先在畫面上塞滿對應數量的網格盒子容器
+ const slotElements = [];
+ for(let i = 0; i < count; i++) {
+  const slotDiv = document.createElement("div");
+  slotDiv.className = "fruit-slot";
+  gameArea.appendChild(slotDiv);
+  slotElements.push(slotDiv);
+ }
+
+ // 5. 依照洗牌後的隨機位置，把水果安全地放進格子正中央
+ chosenFruits.forEach((fruit, index) => {
+  const targetSlotIndex = slots[index];
+  const targetSlot = slotElements[targetSlotIndex];
 
   const div = document.createElement("div");
   div.className = "fruit";
   div.textContent = fruit.emoji;
-
-  let x, y, safe = false, tries = 0;
-  while (!safe && tries < 300) {
-   // 關鍵修正：坐標完全鎖定在純白安全區內，並減去水果自身的寬高防止右下溢出
-   x = Math.random() * (validWidth - fruitWidth);
-   y = Math.random() * (validHeight - fruitHeight);
-   safe = true;
-
-   for (const p of placed) {
-    if (Math.hypot(x - p.x, y - p.y) < 65) {
-     safe = false;
-     break;
-    }
-   }
-   tries++;
-  }
-
-  placed.push({ x, y });
-
-  // 關鍵修正：因為外圍有 CSS padding，這裡設定的 left/top 會從 padding 內側邊緣開始算，絕對安全！
-  div.style.left = x + "px";
-  div.style.top = y + "px";
-  div.style.transform = `rotate(${Math.random() * 360}deg)`;
+  
+  // 隨機旋轉與微幅偏移，保留雜亂無章的尋找趣味，但極限被死死限制在格子內
+  const rotateDeg = Math.random() * 360;
+  const offsetX = (Math.random() * 12 - 6); // 微調偏移量，確保不出格
+  const offsetY = (Math.random() * 12 - 6);
+  div.style.transform = `translate(${offsetX}px, ${offsetY}px) rotate(${rotateDeg}deg)`;
 
   div.onclick = () => {
    if (fruit.name === targetFruit.name) {
@@ -258,8 +267,8 @@ function createFruits() {
    }
   };
 
-  gameArea.appendChild(div);
- }
+  targetSlot.appendChild(div);
+ });
 }
 
 function startGame(gray){
@@ -268,10 +277,8 @@ function startGame(gray){
 
  if(gray) gameArea.classList.add("grayscale");
 
- setTimeout(() => {
-  createFruits();
-  chooseTarget();
- }, 100);
+ createFruits();
+ chooseTarget();
 
  timer=setInterval(()=>{
   time--;
