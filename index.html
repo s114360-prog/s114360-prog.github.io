@@ -45,14 +45,14 @@ width:220px;padding:14px;border:none;border-radius:16px;
 background:#ff8fab;color:white;font-size:20px;cursor:pointer;
 }
 
-/* 終極修正：將遊戲區改為 Grid 彈性網格佈局，徹底消除絕對定位的溢出漏洞 */
+/* 優化：縮格尺寸並減少 gap 縫隙，讓水果密度大幅提高 */
 #gameArea{
 flex:1;
 display: grid;
-grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
-grid-auto-rows: minmax(85px, 1fr);
-gap: 15px;
-padding: 25px;
+grid-template-columns: repeat(auto-fill, minmax(55px, 1fr));
+grid-auto-rows: minmax(55px, 1fr);
+gap: 6px;
+padding: 15px;
 overflow: hidden;
 background:rgba(255,255,255,.15);
 align-content: center;
@@ -60,7 +60,6 @@ justify-content: center;
 }
 .grayscale{filter:grayscale(100%)}
 
-/* 終極修正：水果在網格單元格內完美居中，不再有任何貼邊裁切可能 */
 .fruit-slot{
 display: flex;
 align-items: center;
@@ -70,7 +69,7 @@ height: 100%;
 overflow: visible;
 }
 .fruit{
-font-size:48px;
+font-size:36px; /* 配合高密度微調字型大小 */
 cursor:pointer;
 user-select:none;
 z-index:5;
@@ -118,16 +117,17 @@ pointer-events: none;
     .status-box, #notHereBtn{
         width:auto;font-size:18px;margin:2px;padding:8px 15px;
     }
+    /* 麥克優化：手機直向時的極限網格高密度配置 */
     #gameArea{
         height:calc(100vh - 160px);
-        grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
-        grid-auto-rows: minmax(65px, 1fr);
-        gap: 10px;
-        padding: 15px;
+        grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+        grid-auto-rows: minmax(45px, 1fr);
+        gap: 4px;
+        padding: 8px;
     }
     .button-group{flex-direction:column}
     .fruit{
-        font-size:36px;
+        font-size:28px;
     }
     #title{font-size:38px;text-align:center}
 }
@@ -208,28 +208,39 @@ function createFruits() {
  gameArea.innerHTML = "";
  currentFruits = [];
 
- const isMobile = window.innerWidth < 900;
- // 依據網格容量自動調整總生成數量，手機 12 個，電腦 28 個
- const count = isMobile ? 12 : 28;
+ // 1. 先確認目前抽出來的正確答案（必須在最前面決定）
+ if (!targetFruit) {
+  targetFruit = fruits[Math.floor(Math.random() * fruits.length)];
+ }
 
- // 1. 先抽取本次要產生的隨機水果陣列
+ const isMobile = window.innerWidth < 900;
+ // 密度提高：手機版改為 32 個，電腦版改為 72 個
+ const count = isMobile ? 32 : 72;
+
+ // 2. 核心修正：除了第一個放入正確答案，其餘格子全部過濾掉正確答案，確保唯一性
  let chosenFruits = [];
- for (let i = 0; i < count; i++) {
-  const f = fruits[Math.floor(Math.random() * fruits.length)];
+ // 先強制放入「唯一一個」正確答案
+ chosenFruits.push(targetFruit);
+ currentFruits.push(targetFruit.name);
+
+ // 篩選出不包含正確答案的其他水果池
+ const otherFruits = fruits.filter(f => f.name !== targetFruit.name);
+
+ // 塞滿其餘的格子
+ for (let i = 1; i < count; i++) {
+  const f = otherFruits[Math.floor(Math.random() * otherFruits.length)];
   chosenFruits.push(f);
   currentFruits.push(f.name);
  }
 
- // 2. 終極修正：利用網格座位。建立與水果數量相等的「空位格子數」
+ // 3. 網格座位洗牌演算法
  let slots = Array.from({length: count}, (_, i) => i);
- 
- // 3. 將這些位置隨機打亂（洗牌演算法）
  for (let i = slots.length - 1; i > 0; i--) {
   const j = Math.floor(Math.random() * (i + 1));
   [slots[i], slots[j]] = [slots[j], slots[i]];
  }
 
- // 4. 先在畫面上塞滿對應數量的網格盒子容器
+ // 4. 生成網格插槽
  const slotElements = [];
  for(let i = 0; i < count; i++) {
   const slotDiv = document.createElement("div");
@@ -238,7 +249,7 @@ function createFruits() {
   slotElements.push(slotDiv);
  }
 
- // 5. 依照洗牌後的隨機位置，把水果安全地放進格子正中央
+ // 5. 將水果安全置入並賦予亂數旋轉
  chosenFruits.forEach((fruit, index) => {
   const targetSlotIndex = slots[index];
   const targetSlot = slotElements[targetSlotIndex];
@@ -247,10 +258,10 @@ function createFruits() {
   div.className = "fruit";
   div.textContent = fruit.emoji;
   
-  // 隨機旋轉與微幅偏移，保留雜亂無章的尋找趣味，但極限被死死限制在格子內
   const rotateDeg = Math.random() * 360;
-  const offsetX = (Math.random() * 12 - 6); // 微調偏移量，確保不出格
-  const offsetY = (Math.random() * 12 - 6);
+  // 微幅位移，配合格子縮小同步降低偏移，防止出格
+  const offsetX = (Math.random() * 8 - 4); 
+  const offsetY = (Math.random() * 8 - 4);
   div.style.transform = `translate(${offsetX}px, ${offsetY}px) rotate(${rotateDeg}deg)`;
 
   div.onclick = () => {
@@ -258,8 +269,10 @@ function createFruits() {
     score++;
     scoreEl.textContent = "分數：" + score;
     showMsg("答對！");
-    createFruits();
+    // 答對後，先清空 targetFruit，由 createFruits 重新產生
+    targetFruit = null;
     chooseTarget();
+    createFruits();
    } else {
     score = Math.max(0, score - 1);
     scoreEl.textContent = "分數：" + score;
@@ -277,8 +290,9 @@ function startGame(gray){
 
  if(gray) gameArea.classList.add("grayscale");
 
- createFruits();
+ // 先行初始化目標，再進行繪製
  chooseTarget();
+ createFruits();
 
  timer=setInterval(()=>{
   time--;
@@ -302,6 +316,7 @@ bwBtn.onclick=()=>startGame(true);
 notHereBtn.onclick=()=>{
  const exists=currentFruits.includes(targetFruit.name);
 
+ // 因為修正後正確答案必定會被塞入陣列中，這裡額外保留極低機率(或手動測試)的防錯處理
  if(!exists){
   score++;
   showMsg("真的不在這裡！");
@@ -311,8 +326,9 @@ notHereBtn.onclick=()=>{
  }
 
  scoreEl.textContent="分數："+score;
- createFruits();
+ targetFruit = null;
  chooseTarget();
+ createFruits();
 };
 </script>
 </body>
