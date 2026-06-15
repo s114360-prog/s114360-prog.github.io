@@ -45,21 +45,26 @@ width:220px;padding:14px;border:none;border-radius:16px;
 background:#ff8fab;color:white;font-size:20px;cursor:pointer;
 }
 
+/* 關鍵修正：透過 CSS padding 建立硬性護城河，阻止任何子元素貼邊 */
 #gameArea{
 flex:1;position:relative;overflow:hidden;
 background:rgba(255,255,255,.15);
+padding: 60px; /* 電腦版四周留出 60px 絕對安全禁區 */
+box-sizing: border-box;
 contain: layout size;
 }
 .grayscale{filter:grayscale(100%)}
+
+/* 關鍵修正：縮小物件的實際寬高碰撞箱，確保文字不會因旋轉溢出 */
 .fruit{
 position:absolute;
-font-size:50px;
+font-size:46px; /* 稍微縮小字型，優化可視度 */
 cursor:pointer;
 user-select:none;
 z-index:5;
 line-height:1;
-width:55px;
-height:55px;
+width:50px;
+height:50px;
 display:flex;
 align-items:center;
 justify-content:center;
@@ -105,14 +110,16 @@ pointer-events: none;
     .status-box, #notHereBtn{
         width:auto;font-size:18px;margin:2px;padding:8px 15px;
     }
+    /* 關鍵修正：手機直向時，留出 40px 的安全禁區 */
     #gameArea{
         height:calc(100vh - 160px);
+        padding: 40px; 
     }
     .button-group{flex-direction:column}
     .fruit{
-        font-size:36px;
-        width:40px;
-        height:40px;
+        font-size:32px;
+        width:36px;
+        height:36px;
     }
     #title{font-size:38px;text-align:center}
 }
@@ -196,18 +203,13 @@ function createFruits() {
  const isMobile = window.innerWidth < 900;
  const count = isMobile ? 12 : 30;
 
- // 1. 抓取遊戲區域實際可用的物理寬高
- const areaWidth = gameArea.clientWidth || gameArea.offsetWidth;
- const areaHeight = gameArea.clientHeight || gameArea.offsetHeight;
+ // 關鍵修正：使用 clientWidth 獲取自動扣除 CSS padding 之後的「真實純白安全遊戲區」寬高
+ const validWidth = gameArea.clientWidth;
+ const validHeight = gameArea.clientHeight;
 
- // 2. 設定嚴格的安全內邊距（確保水果旋轉角絕不踩線）
- const padding = isMobile ? 40 : 55;
- 
- // 3. 修正：正確限制隨機範圍。中心點 X 只能在 [minX, maxX] 之間
- const minX = padding;
- const maxX = areaWidth - padding;
- const minY = padding;
- const maxY = areaHeight - padding;
+ // 關鍵修正：計算出水果內部渲染所需的寬高邊距，不與外圍 padding 重疊
+ const fruitWidth = isMobile ? 36 : 50;
+ const fruitHeight = isMobile ? 36 : 50;
 
  const placed = [];
 
@@ -221,9 +223,9 @@ function createFruits() {
 
   let x, y, safe = false, tries = 0;
   while (!safe && tries < 300) {
-   // 4. 修正：利用標準隨機區間公式，確保範圍完全鎖死在安全線內
-   x = minX + Math.random() * (maxX - minX);
-   y = minY + Math.random() * (maxY - minY);
+   // 關鍵修正：坐標完全鎖定在純白安全區內，並減去水果自身的寬高防止右下溢出
+   x = Math.random() * (validWidth - fruitWidth);
+   y = Math.random() * (validHeight - fruitHeight);
    safe = true;
 
    for (const p of placed) {
@@ -237,10 +239,10 @@ function createFruits() {
 
   placed.push({ x, y });
 
+  // 關鍵修正：因為外圍有 CSS padding，這裡設定的 left/top 會從 padding 內側邊緣開始算，絕對安全！
   div.style.left = x + "px";
   div.style.top = y + "px";
-  // 5. 修正：將定位基準點移至中心點（translate -50%），徹底消除因水果形狀旋轉造成的溢出
-  div.style.transform = `translate(-50%, -50%) rotate(${Math.random() * 360}deg)`;
+  div.style.transform = `rotate(${Math.random() * 360}deg)`;
 
   div.onclick = () => {
    if (fruit.name === targetFruit.name) {
