@@ -55,6 +55,10 @@ font-size:56px;
 cursor:pointer;
 user-select:none;
 z-index:1;
+/* 新增：將定位點設在水果中心，方便精準計算邊距與旋轉基準 */
+transform-origin: center center;
+margin-left: -28px; 
+margin-top: -28px;
 }
 #message{
 position:fixed;
@@ -95,7 +99,11 @@ z-index:999;
         height:calc(100vh - 160px);
     }
     .button-group{flex-direction:column}
-    .fruit{font-size:42px}
+    .fruit{
+        font-size:42px;
+        margin-left: -21px;
+        margin-top: -21px;
+    }
     #title{font-size:38px;text-align:center}
 }
 </style>
@@ -127,7 +135,6 @@ z-index:999;
 </div>
 
 <script>
-// 1. 宣告遊戲資料
 const fruits=[
 {emoji:"🍎",name:"蘋果",color:"紅色"},
 {emoji:"🍏",name:"青蘋果",color:"綠色"},
@@ -149,7 +156,6 @@ const fruits=[
 let score=0,time=60,targetFruit,currentFruits=[];
 let timer;
 
-// 2. 獲取 DOM 元素（移至最上方，防止無法綁定事件）
 const menu=document.getElementById("menu");
 const game=document.getElementById("game");
 const gameArea=document.getElementById("gameArea");
@@ -162,7 +168,6 @@ const normalBtn=document.getElementById("normalBtn");
 const bwBtn=document.getElementById("bwBtn");
 const notHereBtn=document.getElementById("notHereBtn");
 
-// 3. 遊戲邏輯函式
 function showMsg(text){
  const m=document.getElementById("message");
  m.textContent=text;
@@ -181,7 +186,10 @@ function createFruits(){
  gameArea.innerHTML="";
  currentFruits=[];
 
- const count=window.innerWidth<900?12:30;
+ const isMobile = window.innerWidth < 900;
+ const count = isMobile ? 12 : 30;
+ // 修正：依據水果大小（56px / 42px）設定精準的安全內邊距（半徑 + 旋轉緩衝）
+ const padding = isMobile ? 35 : 45; 
  const placed=[];
 
  for(let i=0;i<count;i++){
@@ -194,13 +202,13 @@ function createFruits(){
 
   let x,y,safe=false,tries=0;
   while(!safe && tries<300){
-   const padding = 50;
-
-   x = padding + Math.random()*(gameArea.clientWidth-padding*2);
-   y = padding + Math.random()*(gameArea.clientHeight-padding*2);
+   // 修正：確保生成的中心點絕對不會讓圖案邊緣超出 gameArea
+   x = padding + Math.random() * (gameArea.clientWidth - padding * 2);
+   y = padding + Math.random() * (gameArea.clientHeight - padding * 2);
    safe=true;
 
    for(const p of placed){
+    // 檢查水果之間是否重疊過深
     if(Math.hypot(x-p.x,y-p.y)<65){
       safe=false; break;
     }
@@ -257,7 +265,6 @@ function startGame(gray){
  },1000);
 }
 
-// 4. 綁定按鍵事件
 normalBtn.onclick=()=>startGame(false);
 bwBtn.onclick=()=>startGame(true);
 
@@ -279,4 +286,3 @@ notHereBtn.onclick=()=>{
 </script>
 </body>
 </html>
-
