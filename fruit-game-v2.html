@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
 <title>水果尋找遊戲 v2</title>
 <style>
 *{box-sizing:border-box}
@@ -10,10 +10,13 @@ body{
 margin:0;font-family:"Microsoft JhengHei",sans-serif;
 background:linear-gradient(135deg,#ffe7c7,#ffd6e7);
 overflow:hidden;
+height: 100vh;
+height: 100dvh; 
 }
 #menu{
-height:100vh;display:flex;flex-direction:column;
+height:100vh;height:100dvh;display:flex;flex-direction:column;
 justify-content:center;align-items:center;gap:20px;
+position: relative;
 }
 #title{font-size:52px;color:#ff6b81}
 .button-group{display:flex;gap:20px}
@@ -23,10 +26,20 @@ font-size:28px;cursor:pointer;color:white;
 }
 #normalBtn{background:#ffb347}
 #bwBtn{background:#666}
-#game{display:none;width:100vw;height:100vh}
+
+#game{
+display:none;
+width:100vw;
+height:100vh;
+height:100dvh;
+flex-direction:row;
+}
 #sidebar{
 width:280px;padding:20px;background:rgba(255,255,255,.95);
 display:flex;flex-direction:column;align-items:center;gap:15px;
+position:relative;
+z-index:99;
+box-shadow:2px 0 10px rgba(0,0,0,0.1);
 }
 #targetBox,.status-box{
 background:white;border-radius:18px;padding:15px;
@@ -35,50 +48,165 @@ width:220px;text-align:center;
 }
 #targetImage{font-size:80px}
 #targetName{font-size:32px;font-weight:bold}
-#targetColor{color:#666}
 .status-box{font-size:24px}
 #notHereBtn{
 width:220px;padding:14px;border:none;border-radius:16px;
 background:#ff8fab;color:white;font-size:20px;cursor:pointer;
 }
+
 #gameArea{
-flex:1;position:relative;overflow:hidden;
+flex:1;
+display: grid;
+gap: 1px;
+padding: 15px; 
+overflow: hidden;
 background:rgba(255,255,255,.15);
+align-content: center;
+justify-content: center;
 }
 .grayscale{filter:grayscale(100%)}
+
+.fruit-slot{
+display: flex;
+align-items: center;
+justify-content: center;
+width: 100%;
+height: 100%;
+overflow: visible;
+}
 .fruit{
-position:absolute;
-font-size:56px;
+font-size:36px;
 cursor:pointer;
 user-select:none;
+z-index:5;
+line-height:1;
+display:inline-block;
+transition: transform 0.1s ease;
 }
+
 #message{
 position:fixed;
-top:15px;left:50%;
+top:30px;left:50%;
 transform:translateX(-50%);
-background:white;
-padding:10px 18px;
-border-radius:12px;
+background:rgba(255, 255, 255, 0.95);
+color: #333;
+font-size: 24px;
+font-weight: bold;
+padding: 15px 30px;
+border-radius: 50px;
+box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 display:none;
-z-index:999;
+z-index:9999;
+pointer-events: none;
 }
 .warning{color:red;font-weight:bold}
 
-@media(max-width:900px){
-body{overflow:hidden}
-#game{flex-direction:column}
-#sidebar{
-width:100%;
-height:390px;
-flex:none;
+/* ========================================================
+   彩蛋全新獨家 CSS 樣式
+   ======================================================== */
+/* 主頁彩蛋物件 */
+#menuPaper {
+position: absolute; left: 25px; bottom: 25px; font-size: 45px; cursor: pointer; display: none; z-index: 10;
 }
-#gameArea{
-height:calc(100vh - 390px);
-flex:none;
+#menuCorner {
+position: absolute; right: 0; bottom: 0; width: 45px; height: 45px;
+background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.15) 50%, rgba(255,255,255,0.8) 100%);
+cursor: pointer; display: none; z-index: 10; border-radius: 10px 0 0 0;
+box-shadow: -2px -2px 5px rgba(0,0,0,0.05);
 }
-.button-group{flex-direction:column}
-.fruit{font-size:42px}
-#title{font-size:38px;text-align:center}
+#menuLaptop {
+position: absolute; left: 25px; bottom: 25px; font-size: 55px; cursor: pointer; display: none; z-index: 10;
+}
+
+/* 放大紙張模態框 */
+#paperOverlay {
+position: fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4);
+display:flex; justify-content:center; align-items:center; z-index:1000; display:none;
+}
+#bigPaper {
+width: 320px; height: 240px; background: #fffdf0; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+display:flex; flex-direction:column; justify-content:center; align-items:center;
+font-size: 24px; font-weight: bold; color: #444; border: 1px solid #ddd; padding: 20px; text-align: center;
+}
+
+/* 對話框容器與背景 */
+#storyOverlay {
+position: fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.2);
+z-index: 2000; display:none; cursor: pointer;
+}
+.dialogue-box {
+position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
+width: 90%; max-width: 500px; padding: 22px; border-radius: 25px; font-size: 20px;
+font-weight: bold; box-shadow: 0 8px 25px rgba(0,0,0,0.2); line-height: 1.5;
+animation: popIn 0.25s ease-out;
+}
+@keyframes popIn { from{transform: translateX(-50%) scale(0.9); opacity:0} to{transform: translateX(-50%) scale(1); opacity:1} }
+
+/* 三種對話框顏色樣式 */
+.dialogue-black { background: #2c2c2c; color: #ffffff; border: 3px solid #444; }
+.dialogue-orange { background: #ff9f43; color: #ffffff; border: 3px solid #ee5a24; }
+.dialogue-white { background: #ffffff; color: #2c2c2c; border: 3px solid #dee2e6; }
+
+/* 劇情互動選項按鈕 */
+.story-options {
+display:flex; gap: 15px; margin-top: 15px; justify-content: center;
+}
+.story-btn {
+padding: 10px 25px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold;
+cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: 0.1s;
+}
+.btn-orange { background: #ff9f43; color: white; }
+.btn-black { background: #2c2c2c; color: white; }
+
+/* 電腦密碼鎖介面 */
+#laptopOverlay {
+position: fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5);
+display:flex; justify-content:center; align-items:center; z-index:1500; display:none;
+}
+#laptopScreen {
+width: 340px; background: #333; border: 12px solid #222; border-radius: 15px; padding: 25px;
+box-shadow: 0 15px 40px rgba(0,0,0,0.4); color: white; text-align: center;
+}
+#pwdInput {
+width: 100%; padding: 12px; font-size: 22px; text-align: center; letter-spacing: 5px;
+margin: 15px 0; border-radius: 8px; border: none;
+}
+
+/* 資料夾刪除介面 */
+#systemDrive { display: none; text-align: center; }
+#folderIcon { font-size: 75px; cursor: pointer; display: inline-block; margin-top: 10px; user-select:none; }
+#fileToDel {
+display: none; background: #fff; color: #333; padding: 15px; border-radius: 10px;
+margin-top: 15px; font-weight: bold; cursor: pointer; user-select:none;
+}
+
+/* 網頁震動效果 */
+.shake-screen { animation: shakeEffect 0.1s infinite; }
+@keyframes shakeEffect {
+  0% { transform: translate(2px, 2px) rotate(0deg); }
+  50% { transform: translate(-2px, -1px) rotate(0.5deg); }
+  100% { transform: translate(1px, -2px) rotate(-0.5deg); }
+}
+
+/* 黑畫面與加載進度條 */
+#blackoutScreen {
+position: fixed; top:0; left:0; width:100vw; height:100vh; background: black;
+z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; display: none;
+}
+#progressBox { width: 70%; max-width: 300px; height: 12px; background: #333; border-radius: 10px; overflow: hidden; margin-top: 15px; }
+#progressBar { width: 0%; height: 100%; background: #2ecc71; transition: width 0.05s linear; }
+
+@media (max-width:900px) and (orientation:portrait){
+    #game{ flex-direction:column; }
+    #sidebar{ width:100%; height:auto; padding:10px; flex-direction:row; justify-content:space-around; flex-wrap:wrap; box-shadow:0 2px 10px rgba(0,0,0,0.1); }
+    #targetBox{ display:flex; align-items:center; gap:10px; width:auto; padding:5px 15px; }
+    #targetImage{ font-size:35px }
+    #targetName{ font-size:20px }
+    .status-box, #notHereBtn{ width:auto; font-size:18px; margin:2px; padding:8px 15px; }
+    #gameArea{ height: calc(100vh - 160px); height: calc(100dvh - 160px); gap: 1px; padding: 10px 10px 45px 10px; }
+    .button-group{ flex-direction:column; }
+    .fruit{ font-size:28px; }
+    #title{ font-size:38px; text-align:center }
 }
 </style>
 </head>
@@ -86,165 +214,78 @@ flex:none;
 
 <div id="message"></div>
 
+<!-- 彩蛋核心 HTML 組件結構 -->
+<div id="paperOverlay" onclick="closePaper()"><div id="bigPaper">右下角，<br>點擊右下角（摺痕）</div></div>
+<div id="laptopOverlay">
+  <div id="laptopScreen">
+    <div id="loginForm">
+      <h3 style="margin-top:0;">💻 系統維護終端</h3>
+      <p>請輸入管理員解鎖密碼</p>
+      <input type="password" id="pwdInput" maxlength="4" placeholder="••••">
+      <div id="pwdOptionBtn" class="story-btn btn-orange" style="margin: 5px auto 0; width: fit-content; font-size:14px;" onclick="cluckNoPwd()">不知道密碼</div>
+    </div>
+    <div id="systemDrive">
+      <p>📁 專題報告根目錄</p>
+      <div id="folderIcon" onclick="openReportFolder()">📁</div>
+      <div id="fileToDel">📄 fruit_game_final_v3_final.html<br><span style="font-size:12px;color:red;">(滑鼠按著不放 / 手指長按 2 秒刪除)</span></div>
+    </div>
+  </div>
+</div>
+<div id="storyOverlay"><div id="dialogueText" class="dialogue-box"></div></div>
+<div id="blackoutScreen">
+  <span style="color:#555; font-family:monospace; font-size:14px;" id="blackHint">正在重置專題伺服器主機...</span>
+  <div id="progressBox"><div id="progressBar"></div></div>
+</div>
+
+<div id="game" style="position: relative;">
+ <div id="sidebar">
+ <div id="targetBox">
+ <div id="targetImage">🍎</div>
+ <div id="targetName">蘋果</div>
+ </div>
+ <div id="score" class="status-box">分數：0</div>
+ <div id="timer" class="status-box">時間：60</div>
+ <button id="notHereBtn">不在這裡喔</button>
+ </div>
+ <div id="gameArea"></div>
+</div>
+
 <div id="menu">
 <h1 id="title">水果尋找遊戲</h1>
 <div class="button-group">
 <button id="normalBtn" class="mode-btn">普通模式</button>
 <button id="bwBtn" class="mode-btn">黑白模式</button>
 </div>
-</div>
-
-<div id="game">
-<div id="sidebar">
-<div id="targetBox">
-<div id="targetImage">🍎</div>
-<div id="targetName">蘋果</div>
-<div id="targetColor">紅色</div>
-</div>
-<div id="score" class="status-box">分數：0</div>
-<div id="timer" class="status-box">時間：60</div>
-<button id="notHereBtn">不在這裡喔</button>
-</div>
-<div id="gameArea"></div>
+<!-- 主頁隱藏出生物件 -->
+<div id="menuPaper" onclick="viewPaper()">📄</div>
+<div id="menuCorner" onclick="triggerCornerStory()"></div>
+<div id="menuLaptop" onclick="openLaptopTerminal()">💻</div>
 </div>
 
 <script>
 const fruits=[
-{emoji:"🍎",name:"蘋果",color:"紅色"},
-{emoji:"🍏",name:"青蘋果",color:"綠色"},
-{emoji:"🍌",name:"香蕉",color:"黃色"},
-{emoji:"🍇",name:"葡萄",color:"紫色"},
-{emoji:"🍓",name:"草莓",color:"紅色"},
-{emoji:"🍒",name:"櫻桃",color:"紅色"},
-{emoji:"🍉",name:"西瓜",color:"綠色"},
-{emoji:"🍍",name:"鳳梨",color:"黃色"},
-{emoji:"🥝",name:"奇異果",color:"綠色"},
-{emoji:"🍑",name:"水蜜桃",color:"粉色"},
-{emoji:"🍊",name:"橘子",color:"橘色"},
-{emoji:"🍋",name:"檸檬",color:"黃色"},
-{emoji:"🥥",name:"椰子",color:"棕色"},
-{emoji:"🫐",name:"藍莓",color:"藍色"},
-{emoji:"🍐",name:"梨子",color:"黃綠色"}
+{emoji:"🍎",name:"蘋果"}, {emoji:"🍏",name:"青蘋果"}, {emoji:"🍌",name:"香蕉"},
+{emoji:"🍇",name:"葡萄"}, {emoji:"🍓",name:"草莓"}, {emoji:"🍒",name:"櫻桃"},
+{emoji:"🍉",name:"西瓜"}, {emoji:"🍍",name:"鳳梨"}, {emoji:"🥝",name:"奇異果"},
+{emoji:"🍑",name:"水蜜桃"},{emoji:"🍊",name:"橘子"}, {emoji:"🍋",name:"檸檬"},
+{emoji:"🥥",name:"椰子"}, {emoji:"🫐",name:"藍莓"}, {emoji:"🍐",name:"梨子"}
 ];
 
 let score=0,time=60,targetFruit,currentFruits=[];
 let timer;
+// 彩蛋全域進度變數
+let easterEggTriggered = false; 
+let eggProgress = 0;
 
+const menu=document.getElementById("menu");
+const game=document.getElementById("game");
 const gameArea=document.getElementById("gameArea");
-
-function showMsg(text){
- const m=document.getElementById("message");
- m.textContent=text;
- m.style.display="block";
- setTimeout(()=>m.style.display="none",1200);
-}
-
-function chooseTarget(){
- targetFruit=fruits[Math.floor(Math.random()*fruits.length)];
- targetImage.textContent=targetFruit.emoji;
- targetName.textContent=targetFruit.name;
- targetColor.textContent=targetFruit.color;
-}
-
-function createFruits(){
- gameArea.innerHTML="";
- currentFruits=[];
-
- const count=window.innerWidth<900?12:30;
- const placed=[];
-
- for(let i=0;i<count;i++){
-  const fruit=fruits[Math.floor(Math.random()*fruits.length)];
-  currentFruits.push(fruit.name);
-
-  const div=document.createElement("div");
-  div.className="fruit";
-  div.textContent=fruit.emoji;
-
-  let x,y,safe=false,tries=0;
-  while(!safe && tries<300){
-   x=Math.random()*(gameArea.clientWidth-80);
-   y=Math.random()*(gameArea.clientHeight-80);
-   safe=true;
-
-   for(const p of placed){
-    if(Math.hypot(x-p.x,y-p.y)<65){
-      safe=false; break;
-    }
-   }
-   tries++;
-  }
-
-  placed.push({x,y});
-
-  div.style.left=x+"px";
-  div.style.top=y+"px";
-  div.style.transform=`rotate(${Math.random()*360}deg)`;
-
-  div.onclick=()=>{
-   if(fruit.name===targetFruit.name){
-    score++;
-    scoreEl.textContent="分數："+score;
-    showMsg("答對！");
-    createFruits();
-    chooseTarget();
-   }else{
-    score=Math.max(0,score-1);
-    scoreEl.textContent="分數："+score;
-    showMsg("答錯！");
-   }
-  };
-
-  gameArea.appendChild(div);
- }
-}
-
-function startGame(gray){
- menu.style.display="none";
- game.style.display="flex";
-
- if(gray) gameArea.classList.add("grayscale");
-
- createFruits();
- chooseTarget();
-
- timer=setInterval(()=>{
-  time--;
-  timerEl.textContent="時間："+time;
-
-  if(time<=10){
-   timerEl.classList.add("warning");
-  }
-
-  if(time<=0){
-   clearInterval(timer);
-   alert("遊戲結束！\\n最終分數："+score);
-   location.reload();
-  }
- },1000);
-}
-
-normalBtn.onclick=()=>startGame(false);
-bwBtn.onclick=()=>startGame(true);
-
-notHereBtn.onclick=()=>{
- const exists=currentFruits.includes(targetFruit.name);
-
- if(!exists){
-  score++;
-  showMsg("真的不在這裡！");
- }else{
-  score=Math.max(0,score-1);
-  showMsg("其實有喔！");
- }
-
- scoreEl.textContent="分數："+score;
- createFruits();
- chooseTarget();
-};
-
+const targetImage=document.getElementById("targetImage");
+const targetName=document.getElementById("targetName");
 const scoreEl=document.getElementById("score");
 const timerEl=document.getElementById("timer");
-</script>
-</body>
-</html>
+const normalBtn=document.getElementById("normalBtn");
+const bwBtn=document.getElementById("bwBtn");
+const notHereBtn=document.getElementById("notHereBtn");
+
+function showMsg(text){
