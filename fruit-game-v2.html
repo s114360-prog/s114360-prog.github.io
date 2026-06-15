@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
-<title>水果尋找遊戲 v2</title>
+<title>水果尋找遊戲 v2 - 隱藏版</title>
 <style>
 *{box-sizing:border-box}
 body{
@@ -18,7 +18,7 @@ height:100vh;height:100dvh;display:flex;flex-direction:column;
 justify-content:center;align-items:center;gap:20px;
 position: relative;
 }
-#title{font-size:52px;color:#ff6b81;margin:0}
+#title{font-size:52px;color:#ff6b81}
 .button-group{display:flex;gap:20px}
 .mode-btn{
 width:220px;height:90px;border:none;border-radius:20px;
@@ -28,23 +28,16 @@ font-size:28px;cursor:pointer;color:white;
 #bwBtn{background:#666}
 
 #game{
-display:none;
-width:100vw;
-height:100vh;
-height:100dvh;
-flex-direction:row;
+display:none;width:100vw;height:100vh;height:100dvh;flex-direction:row;
 }
 #sidebar{
 width:280px;padding:20px;background:rgba(255,255,255,.95);
 display:flex;flex-direction:column;align-items:center;gap:15px;
-position:relative;
-z-index:99;
-box-shadow:2px 0 10px rgba(0,0,0,0.1);
+position:relative;z-index:99;box-shadow:2px 0 10px rgba(0,0,0,0.1);
 }
 #targetBox,.status-box{
 background:white;border-radius:18px;padding:15px;
-box-shadow:0 4px 10px rgba(0,0,0,.1);
-width:220px;text-align:center;
+box-shadow:0 4px 10px rgba(0,0,0,.1);width:220px;text-align:center;
 }
 #targetImage{font-size:80px}
 #targetName{font-size:32px;font-weight:bold}
@@ -55,178 +48,132 @@ background:#ff8fab;color:white;font-size:20px;cursor:pointer;
 }
 
 #gameArea{
-flex:1;
-display: grid;
-gap: 1px;
-padding: 15px; 
-overflow: hidden;
-background:rgba(255,255,255,.15);
-align-content: center;
-justify-content: center;
+flex:1;display: grid;gap: 1px;padding: 15px;overflow: hidden;
+background:rgba(255,255,255,.15);align-content: center;justify-content: center;
 }
 .grayscale{filter:grayscale(100%)}
 
+/* 特殊修正：確保彩蛋📄不受黑白模式干擾，永遠自帶彩色耀眼光芒 */
+.grayscale .egg-item {
+filter: url('data:image/svg+xml;utf8,<svg xmlns="http://w3.org"><filter id="none"></filter></svg>') !important;
+filter: none !important;
+}
+
 .fruit-slot{
-display: flex;
-align-items: center;
-justify-content: center;
-width: 100%;
-height: 100%;
-overflow: visible;
+display: flex;align-items: center;justify-content: center;
+width: 100%;height: 100%;overflow: visible;
 }
 .fruit{
-font-size:36px;
-cursor:pointer;
-user-select:none;
-z-index:5;
-line-height:1;
-display:inline-block;
+font-size:36px;cursor:pointer;user-select:none;z-index:5;line-height:1;
+display:inline-block;transition: transform 0.1s ease;
 }
 
 #message{
-position:fixed;
-top:30px;left:50%;
-transform:translateX(-50%);
-background:rgba(255, 255, 255, 0.95);
-color: #333;
-font-size: 24px;
-font-weight: bold;
-padding: 15px 30px;
-border-radius: 50px;
-box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-display:none;
-z-index:9999;
-pointer-events: none;
+position:fixed;top:30px;left:50%;transform:translateX(-50%);
+background:rgba(255, 255, 255, 0.95);color: #333;font-size: 24px;
+font-weight: bold;padding: 15px 30px;border-radius: 50px;
+box-shadow: 0 4px 15px rgba(0,0,0,0.2);display:none;z-index:9999;pointer-events: none;
 }
 .warning{color:red;font-weight:bold}
 
-/* 隱藏內容專用樣式 */
-#hiddenPaperMenu {
-display: none;
-position: absolute;
-bottom: 20px; left: 20px;
-font-size: 50px; cursor: pointer;
-z-index: 10;
-animation: bounce 2s infinite;
+/* 主頁隱藏元素樣式 */
+#menuPaper {
+display: none; position: absolute; left: 20px; bottom: 20px;
+font-size: 50px; cursor: pointer; z-index: 10;
 }
-#hiddenFoldMenu {
-display: none;
-position: absolute;
-bottom: 0; right: 0;
-width: 50px; height: 50px;
-background: linear-gradient(135deg, transparent 50%, #bbb 50%);
-cursor: pointer;
-z-index: 10;
-box-shadow: -2px -2px 5px rgba(0,0,0,0.1);
+#menuFold {
+display: none; position: absolute; right: 0; bottom: 0;
+width: 50px; height: 50px; background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.15) 50%);
+cursor: pointer; z-index: 10;
 }
-#hiddenLaptopMenu {
-display: none;
-position: absolute;
-bottom: 20px; left: 20px;
-font-size: 50px; cursor: pointer;
-z-index: 10;
-}
-@keyframes bounce {
-0%, 100% { transform: translateY(0); }
-50% { transform: translateY(-10px); }
+#menuComputer {
+display: none; position: absolute; left: 20px; bottom: 20px;
+font-size: 50px; cursor: pointer; z-index: 11;
 }
 
-/* 遮罩大面板（放大紙張、電腦、黑屏） */
-.overlay-panel {
-display: none;
-position: fixed;
-top:0; left:0; width:100vw; height:100vh; height:100dvh;
-z-index: 1000;
-background: rgba(0,0,0,0.6);
-justify-content: center; align-items: center;
-}
-.paper-content {
-background: #fffdf0; padding: 40px; border-radius: 4px;
-box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-font-size: 32px; font-weight: bold; text-align: center;
-border: 2px dashed #ccc; cursor: pointer;
-max-width: 80%;
-}
-.laptop-content {
-background: #333; color: white; padding: 30px; border-radius: 12px;
-box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-text-align: center; width: 320px;
-font-family: monospace;
-}
-.laptop-screen {
-background: #000; height: 120px; margin-bottom: 20px;
-border-radius: 6px; display: flex; flex-direction: column;
-justify-content: center; align-items: center; padding: 10px;
-}
-.laptop-content input {
-width: 100%; padding: 10px; font-size: 18px; text-align: center;
-margin-bottom: 15px; border-radius: 4px; border: none;
-}
-.laptop-btn-group { display: flex; gap: 10px; justify-content: center; }
-.laptop-btn {
-padding: 8px 16px; font-size: 14px; cursor: pointer; border: none; border-radius: 4px;
-}
-
-/* 資料夾介面 */
-#folderView { display: none; text-align: center; }
-.file-icon { font-size: 60px; cursor: pointer; user-select: none; display: inline-block; margin-top: 10px;}
-
-/* 劇情對話框系統 */
+/* 劇情對話框大看板樣式 */
 #storyOverlay {
-display: none; position: fixed;
-top:0; left:0; width:100vw; height:100vh; height:100dvh;
-z-index: 2000; background: rgba(0,0,0,0.3);
+display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
+background: rgba(0,0,0,0.4); z-index: 10000; justify-content: center; align-items: center;
 }
-.dialog-box {
-position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%);
-width: 85%; max-width: 550px; padding: 25px; border-radius: 20px;
-font-size: 22px; font-weight: bold; cursor: pointer; line-height: 1.5;
-box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+#storyBox {
+width: 85%; max-width: 500px; background: white; border-radius: 24px; padding: 25px;
+box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 20px;
+position: relative;
 }
-.dialog-black { background: #222; color: #fff; border: 3px solid #ff6b81; }
-.dialog-orange { background: #fff3e0; color: #e65100; border: 3px solid #ffb347; }
-.dialog-white { background: #ffffff; color: #333333; border: 3px solid #666; text-align: center; }
-.dialog-name { font-size: 14px; opacity: 0.8; margin-bottom: 5px; text-transform: uppercase; }
+.dialogue {
+padding: 15px; border-radius: 16px; font-size: 20px; line-height: 1.5; font-weight: bold;
+}
+.dialogue.black { background: #333; color: #fff; }
+.dialogue.orange { background: #ffe3b3; color: #d96200; text-align: right; }
+.dialogue.white { background: #f0f0f0; color: #333; border: 2px solid #ccc; }
+#storyBtn {
+align-self: flex-end; padding: 10px 24px; font-size: 18px; border: none;
+border-radius: 12px; background: #ff6b81; color: white; cursor: pointer; font-weight: bold;
+}
+#storyOptions { display: none; gap: 15px; justify-content: flex-end; }
+.opt-btn {
+padding: 10px 20px; font-size: 18px; border: none; border-radius: 12px;
+cursor: pointer; font-weight: bold; color: white;
+}
+#optHelp { background: #2ed573; }
+#optLeave { background: #a5b1c2; }
 
-.option-group { display: flex; gap: 20px; margin-top: 15px; justify-content: flex-end; }
-.option-btn {
-padding: 8px 20px; border-radius: 10px; border: none; font-size: 18px; cursor: pointer; font-weight: bold;
+/* 放大紙張樣式 */
+#bigPaperOverlay {
+display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
+background: rgba(0,0,0,0.6); z-index: 10005; justify-content: center; align-items: center;
 }
-.opt-orange { background: #ffb347; color: white; }
-.opt-gray { background: #999; color: white; }
+#bigPaper {
+width: 80%; max-width: 400px; background: #ffffd9; border: 2px solid #ddcc77;
+padding: 40px 20px; text-align: center; font-size: 26px; font-weight: bold;
+box-shadow: 0 10px 25px rgba(0,0,0,0.3); color: #444; border-radius: 8px; cursor: pointer;
+}
 
-/* 晃動與載入條樣式 */
-.shake-body { animation: shake 0.1s infinite; }
-@keyframes shake {
-0% { transform: translate(2px, 2px) rotate(0deg); }
-10% { transform: translate(-1px, -2px) rotate(-1deg); }
-20% { transform: translate(-3px, 0px) rotate(1deg); }
-30% { transform: translate(0px, 2px) rotate(0deg); }
-40% { transform: translate(1px, -1px) rotate(1deg); }
-50% { transform: translate(-1px, 2px) rotate(-1deg); }
-60% { transform: translate(-3px, 1px) rotate(0deg); }
-70% { transform: translate(2px, 1px) rotate(-1deg); }
-80% { transform: translate(-1px, -1px) rotate(1deg); }
-90% { transform: translate(2px, -2px) rotate(0deg); }
-100% { transform: translate(1px, -2px) rotate(-1deg); }
+/* 電腦輸入密碼視窗樣式 */
+#computerOverlay {
+display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
+background: rgba(0,0,0,0.7); z-index: 10010; justify-content: center; align-items: center;
 }
-#loadingPanel { display: none; background: #000; color: white; flex-direction: column; }
-.progress-bar { width: 250px; height: 15px; background: #333; border-radius: 10px; overflow: hidden; margin-top: 20px; }
-.progress-fill { width: 0%; height: 100%; background: #00ffcc; transition: width 0.05s linear; }
+#computerScreen {
+width: 85%; max-width: 450px; background: #2c3e50; border-radius: 16px; padding: 30px;
+color: white; text-align: center; font-family: monospace; border: 4px solid #34495e;
+}
+#computerContent { display: flex; flex-direction: column; gap: 15px; align-items: center; }
+#pwdInput {
+width: 80%; padding: 10px; font-size: 20px; text-align: center; border-radius: 8px; border: none;
+}
+.comp-btn {
+padding: 10px 20px; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;
+}
+#compSubmit { background: #3498db; color: white; margin-top: 5px; }
+#compDontKnow { background: #e67e22; color: white; margin-top: 5px; }
+
+/* 刪除文件系統畫面 */
+#folderContent { display: none; flex-direction: column; align-items: center; gap: 20px; width: 100%; }
+#homeworkFile {
+font-size: 60px; cursor: pointer; user-select: none; transition: transform 0.2s;
+}
+
+/* 黑畫面載入條樣式 */
+#blackScreen {
+display: none; position: fixed; top:0; left:0; width:100vw; height:100vh; height:100dvh;
+background: black; z-index: 20000; flex-direction: column; justify-content: center; align-items: center;
+gap: 20px; color: white; font-size: 24px; font-weight: bold;
+}
+#progressContainer { width: 60%; height: 15px; background: #333; border-radius: 10px; overflow: hidden; }
+#progressBar { width: 0%; height: 100%; background: #2ed573; transition: width 0.1s linear; }
 
 @media (max-width:900px) and (orientation:portrait){
     #game{ flex-direction:column; }
     #sidebar{
-        width:100%; height:auto; padding:10px; flex-direction:row;
-        justify-content:space-around; flex-wrap:wrap; box-shadow:0 2px 10px rgba(0,0,0,0.1);
+        width:100%;height:auto;padding:10px;flex-direction:row;justify-content:space-around;flex-wrap:wrap;box-shadow:0 2px 10px rgba(0,0,0,0.1);
     }
-    #targetBox{ display:flex; align-items:center; gap:10px; width:auto; padding:5px 15px; }
-    #targetImage{font-size:35px} #targetName{font-size:20px}
-    .status-box, #notHereBtn{ width:auto; font-size:18px; margin:2px; padding:8px 15px; }
+    #targetBox{ display:flex;align-items:center;gap:10px;width:auto;padding:5px 15px; }
+    #targetImage{font-size:35px}#targetName{font-size:20px}
+    .status-box, #notHereBtn{ width:auto;font-size:18px;margin:2px;padding:8px 15px; }
     #gameArea{ height: calc(100vh - 160px); height: calc(100dvh - 160px); gap: 1px; padding: 10px 10px 45px 10px; }
-    .button-group{flex-direction:column} .fruit{ font-size:28px; }
-    #title{font-size:38px;text-align:center}
-    .dialog-box { width: 90%; font-size: 18px; bottom: 5%; }
+    .button-group{flex-direction:column}.fruit{font-size:28px;}#title{font-size:38px;text-align:center}
 }
 </style>
 </head>
@@ -234,17 +181,16 @@ padding: 8px 20px; border-radius: 10px; border: none; font-size: 18px; cursor: p
 
 <div id="message"></div>
 
-<!-- 菜單主頁 -->
+<!-- 主頁選單 -->
 <div id="menu">
 <h1 id="title">水果尋找遊戲</h1>
 <div class="button-group">
 <button id="normalBtn" class="mode-btn">普通模式</button>
 <button id="bwBtn" class="mode-btn">黑白模式</button>
 </div>
-<!-- 主頁隱藏觸發物件 -->
-<div id="hiddenPaperMenu">📄</div>
-<div id="hiddenFoldMenu"></div>
-<div id="hiddenLaptopMenu">💻</div>
+<div id="menuPaper">📄</div>
+<div id="menuFold"></div>
+<div id="menuComputer">💻</div>
 </div>
 
 <!-- 遊戲畫面 -->
@@ -261,48 +207,46 @@ padding: 8px 20px; border-radius: 10px; border: none; font-size: 18px; cursor: p
  <div id="gameArea"></div>
 </div>
 
-<!-- 放大紙張面板 -->
-<div id="paperOverlay" class="overlay-panel">
- <div class="paper-content">右下角，點擊右下角（摺痕）</div>
-</div>
-
-<!-- 電腦面板 -->
-<div id="laptopOverlay" class="overlay-panel">
- <div class="laptop-content">
-  <div id="passwordView">
-   <div class="laptop-screen">
-    <div style="color: #00ff00; font-size: 20px; margin-bottom: 5px;">SYSTEM LOCK</div>
-    <div style="font-size: 14px;">請輸入系統解鎖密碼</div>
-   </div>
-   <input type="password" id="laptopInput" placeholder="密碼">
-   <div class="laptop-btn-group">
-    <button class="laptop-btn" style="background:#555; color:white;" id="btnInputPass">確認</button>
-    <button class="laptop-btn" style="background:#822;" color:white;" id="btnForgotPass">不知道</button>
-   </div>
-  </div>
-  <div id="folderView">
-   <div class="laptop-screen" style="height:70px;">
-    <div style="font-size:14px; color:#fff;">/根目錄/期末作業/</div>
-   </div>
-   <div class="file-icon" id="targetFile">📄<br><span style="font-size:12px;">專案網頁檔案.html</span></div>
-   <p style="font-size:12px; color:#aaa; margin-top:15px;">（請長按檔案進行刪除）</p>
-  </div>
- </div>
-</div>
-
-<!-- 劇情對話框架構 -->
+<!-- 隱藏對話大看板 -->
 <div id="storyOverlay">
- <div id="dialogBox" class="dialog-box">
-  <div id="dialogName" class="dialog-name">遊戲</div>
-  <div id="dialogText">對話內容</div>
-  <div id="optionGroup" class="option-group"></div>
+ <div id="storyBox">
+  <div id="storySpeaker" style="font-weight: bold; font-size: 16px; color: #555;"></div>
+  <div id="storyText" class="dialogue"></div>
+  <div id="storyOptions">
+   <button id="optHelp" class="opt-btn">幫他</button>
+   <button id="optLeave" class="opt-btn">離開</button>
+  </div>
+  <button id="storyBtn">繼續</button>
  </div>
 </div>
 
-<!-- 黑屏加載面板 -->
-<div id="loadingPanel" class="overlay-panel">
- <div id="loadingText" style="font-size: 24px; font-weight: bold;">網頁資料損毀，正在啟動自動修復機制...</div>
- <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+<!-- 放大檢視神祕紙張 -->
+<div id="bigPaperOverlay"><div id="bigPaper">右下角，點擊右下角</div></div>
+
+<!-- 電腦加密終端視窗 -->
+<div id="computerOverlay">
+ <div id="computerScreen">
+  <div id="computerContent">
+   <h3 style="margin-top:0;">系統加密控制台</h3>
+   <p>請輸入密碼以驗證作者身分：</p>
+   <input type="password" id="pwdInput" placeholder="請輸入4位數密碼">
+   <button id="compSubmit" class="comp-btn">確定輸入</button>
+   <button id="compDontKnow" class="comp-btn">不知道</button>
+  </div>
+  <div id="folderContent">
+   <h3 style="margin-top:0;">期末作業專用資料夾</h3>
+   <p>⚠️ 偵測到關鍵報告檔案</p>
+   <p style="color: #ecc94b; font-size: 13px;">【長按（按住不放）即可將檔案徹底粉碎】</p>
+   <div id="homeworkFile">📁</div>
+   <p id="fileName" style="font-weight:bold; margin-bottom:0;">歷史科期末網頁作業_最終版.zip</p>
+  </div>
+ </div>
+</div>
+
+<!-- 崩潰重啟全黑螢幕 -->
+<div id="blackScreen">
+ <div id="blackMessage">系統毀損，重啟中...</div>
+ <div id="progressContainer"><div id="progressBar"></div></div>
 </div>
 
 <script>
@@ -316,8 +260,21 @@ const fruits=[
 
 let score=0,time=60,targetFruit,currentFruits=[];
 let timer;
-let isHiddenRound = false; // 是否為隱藏關卡
-let paperTriggered = false; // 遊戲內是否撿到了紙
+let eggTriggeredInThisGame = false; // 本場是否抽中彩蛋📄
+let hasFoundPaper = false; // 是否在遊戲中點過📄
+let cheatCounter = 0; // 測試小後門計數器
 
+// 取得 DOM 節點
 const menu=document.getElementById("menu");
 const game=document.getElementById("game");
+const gameArea=document.getElementById("gameArea");
+const targetImage=document.getElementById("targetImage");
+const targetName=document.getElementById("targetName");
+const scoreEl=document.getElementById("score");
+const timerEl=document.getElementById("timer");
+const normalBtn=document.getElementById("normalBtn");
+const bwBtn=document.getElementById("bwBtn");
+const notHereBtn=document.getElementById("notHereBtn");
+
+// 隱藏劇本節點
+const menuPaper = document.getElementById("menuPaper");
