@@ -10,9 +10,11 @@ body{
 margin:0;font-family:"Microsoft JhengHei",sans-serif;
 background:linear-gradient(135deg,#ffe7c7,#ffd6e7);
 overflow:hidden;
+height: 100vh;
+height: 100dvh; 
 }
 #menu{
-height:100vh;display:flex;flex-direction:column;
+height:100vh;height:100dvh;display:flex;flex-direction:column;
 justify-content:center;align-items:center;gap:20px;
 }
 #title{font-size:52px;color:#ff6b81}
@@ -24,7 +26,13 @@ font-size:28px;cursor:pointer;color:white;
 #normalBtn{background:#ffb347}
 #bwBtn{background:#666}
 
-#game{display:none;width:100vw;height:100vh;flex-direction:row}
+#game{
+display:none;
+width:100vw;
+height:100vh;
+height:100dvh;
+flex-direction:row;
+}
 #sidebar{
 width:280px;padding:20px;background:rgba(255,255,255,.95);
 display:flex;flex-direction:column;align-items:center;gap:15px;
@@ -45,7 +53,6 @@ width:220px;padding:14px;border:none;border-radius:16px;
 background:#ff8fab;color:white;font-size:20px;cursor:pointer;
 }
 
-/* 修正：取消 auto-fill 改由 JS 動態塞入精準列數，避免自動長出邊界幽靈格子 */
 #gameArea{
 flex:1;
 display: grid;
@@ -53,7 +60,7 @@ gap: 1px;
 padding: 15px; 
 overflow: hidden;
 background:rgba(255,255,255,.15);
-align-content: center; /* 讓整體網格在正中央對齊 */
+align-content: center;
 justify-content: center;
 }
 .grayscale{filter:grayscale(100%)}
@@ -116,9 +123,10 @@ pointer-events: none;
         width:auto;font-size:18px;margin:2px;padding:8px 15px;
     }
     #gameArea{
-        height:calc(100vh - 160px);
+        height: calc(100vh - 160px);
+        height: calc(100dvh - 160px);
         gap: 1px;
-        padding: 10px;
+        padding: 10px 10px 45px 10px;
     }
     .button-group{flex-direction:column}
     .fruit{
@@ -209,33 +217,46 @@ function createFruits() {
 
  const isMobile = window.innerWidth < 900;
  
- // 加上內襯 Padding 之後的實際可用物理空間
  const areaWidth = gameArea.clientWidth;
  const areaHeight = gameArea.clientHeight;
  
  const colWidth = isMobile ? 42 : 52;
  const rowHeight = isMobile ? 38 : 48;
  
- // 修正：安全減法！無條件捨去再減 1，防止臨界點小數點造成邊緣多出一格擠到外面
  const cols = Math.floor(areaWidth / colWidth) - 1;
  const rows = Math.floor(areaHeight / rowHeight) - 1;
  
- // 修正：利用 JS 直接動態更改 CSS 網格欄位，鎖死總欄數（絕不會自動換行亂塞）
  gameArea.style.gridTemplateColumns = `repeat(${cols}, ${colWidth}px)`;
  gameArea.style.gridAutoRows = `${rowHeight}px`;
  
  const count = Math.max(12, cols * rows);
 
  let chosenFruits = [];
- chosenFruits.push(targetFruit);
- currentFruits.push(targetFruit.name);
+ 
+ // 核心修正：設定 25% 的機率這一局「完全不出現正確答案」
+ const willAppear = Math.random() > 0.25; 
 
+ // 篩選出不包含正確答案的其他水果池
  const otherFruits = fruits.filter(f => f.name !== targetFruit.name);
 
- for (let i = 1; i < count; i++) {
-  const f = otherFruits[Math.floor(Math.random() * otherFruits.length)];
-  chosenFruits.push(f);
-  currentFruits.push(f.name);
+ if (willAppear) {
+  // 75% 機率：放入唯一一個正確答案
+  chosenFruits.push(targetFruit);
+  currentFruits.push(targetFruit.name);
+  
+  // 填滿剩下空間
+  for (let i = 1; i < count; i++) {
+   const f = otherFruits[Math.floor(Math.random() * otherFruits.length)];
+   chosenFruits.push(f);
+   currentFruits.push(f.name);
+  }
+ } else {
+  // 25% 機率：全部格子的空間都用其他水果填滿，場上絕對沒有正確答案
+  for (let i = 0; i < count; i++) {
+   const f = otherFruits[Math.floor(Math.random() * otherFruits.length)];
+   chosenFruits.push(f);
+   currentFruits.push(f.name);
+  }
  }
 
  let slots = Array.from({length: count}, (_, i) => i);
@@ -314,15 +335,16 @@ function startGame(gray){
 normalBtn.onclick=()=>startGame(false);
 bwBtn.onclick=()=>startGame(true);
 
+// 核心修正：「不在這裡喔」按鈕的判定邏輯
 notHereBtn.onclick=()=>{
  const exists=currentFruits.includes(targetFruit.name);
 
  if(!exists){
   score++;
-  showMsg("真的不在這裡！");
- }else{
+  showMsg("真的不在這裡！加1分！");
+ } else {
   score=Math.max(0,score-1);
-  showMsg("其實有喔！");
+  showMsg("其實有喔！扣1分！");
  }
 
  scoreEl.textContent="分數："+score;
