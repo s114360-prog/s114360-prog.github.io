@@ -95,23 +95,145 @@ overflow:hidden;height:100dvh;
 </div>
 <script>
 const fruits = [{"emoji":"🍎","name":"蘋果"},{"emoji":"🍏","name":"青蘋果"},{"emoji":"🍌","name":"香蕉"},{"emoji":"🍇","name":"葡萄"},{"emoji":"🍓","name":"草莓"},{"emoji":"🍒","name":"櫻桃"},{"emoji":"🍉","name":"西瓜"},{"emoji":"🍍","name":"鳳梨"},{"emoji":"🥝","name":"奇異果"},{"emoji":"🍑","name":"水蜜桃"},{"emoji":"🍊","name":"橘子"},{"emoji":"🍋","name":"檸檬"},{"emoji":"🥥","name":"椰子"},{"emoji":"🫐","name":"藍莓"},{"emoji":"🍐","name":"梨子"}];
-let score=0, time=60, targetFruit, currentFruits=[], timer, isPaperSpawned=false, triggerStoryMenuClose=false, script=[], scriptIndex=0;
-const menu=document.getElementById("menu"), game=document.getElementById("game"), gameArea=document.getElementById("gameArea"), targetImage=document.getElementById("targetImage"), targetName=document.getElementById("targetName"), scoreEl=document.getElementById("score"), timerEl=document.getElementById("timer"), normalBtn=document.getElementById("normalBtn"), bwBtn=document.getElementById("bwBtn"), notHereBtn=document.getElementById("notHereBtn"), menuPaper=document.getElementById("menuPaper"), menuFold=document.getElementById("menuFold"), menuComp=document.getElementById("menuComp"), dialogOverlay=document.getElementById("dialogOverlay"), dialogBox=document.getElementById("dialogBox"), compModal=document.getElementById("compModal"), passInput=document.getElementById("passInput"), loadingScreen=document.getElementById("loadingScreen"), barFill=document.getElementById("barFill"), targetFile=document.getElementById("targetFile");
+let score=0;
+let time=60;
+let targetFruit;
+let currentFruits=[];
+let timer;
+let isPaperSpawned=false;
+let triggerStoryMenuClose=false;
+let script=[];
+let scriptIndex=0;
+const menu=document.getElementById("menu");
+const game=document.getElementById("game");
+const gameArea=document.getElementById("gameArea");
+const targetImage=document.getElementById("targetImage");
+const targetName=document.getElementById("targetName");
+const scoreEl=document.getElementById("score");
+const timerEl=document.getElementById("timer");
+const normalBtn=document.getElementById("normalBtn");
+const bwBtn=document.getElementById("bwBtn");
+const notHereBtn=document.getElementById("notHereBtn");
+const menuPaper=document.getElementById("menuPaper");
+const menuFold=document.getElementById("menuFold");
+const menuComp=document.getElementById("menuComp");
+const dialogOverlay=document.getElementById("dialogOverlay");
+const dialogBox=document.getElementById("dialogBox");
+const compModal=document.getElementById("compModal");
+const passInput=document.getElementById("passInput");
+const loadingScreen=document.getElementById("loadingScreen");
+const barFill=document.getElementById("barFill");
+const targetFile=document.getElementById("targetFile");
 function showMsg(t){const m=document.getElementById("message");m.textContent=t;m.style.display="block";setTimeout(()=>m.style.display="none",1000);}
 function chooseTarget(){targetFruit=fruits[Math.floor(Math.random()*fruits.length)];targetImage.textContent=targetFruit.emoji;targetName.textContent=targetFruit.name;}
 function createFruits() {
- gameArea.innerHTML = ""; currentFruits = []; if (!targetFruit) targetFruit = fruits[Math.floor(Math.random() * fruits.length)];
- const isMobile = window.innerWidth < 900, areaWidth = gameArea.clientWidth, areaHeight = gameArea.clientHeight, colWidth = isMobile ? 42 : 52, rowHeight = isMobile ? 38 : 48, cols = Math.floor(areaWidth / colWidth) - 1, rows = Math.floor(areaHeight / rowHeight) - 1;
- gameArea.style.gridTemplateColumns = "repeat(" + cols + ", " + colWidth + "px)"; gameArea.style.gridAutoRows = rowHeight + "px";
- const count = Math.max(12, cols * rows); let chosenFruits = [];
+ gameArea.innerHTML = "";
+ currentFruits = [];
+ if (!targetFruit) targetFruit = fruits[Math.floor(Math.random() * fruits.length)];
+ const isMobile = window.innerWidth < 900;
+ const areaWidth = gameArea.clientWidth;
+ const areaHeight = gameArea.clientHeight;
+ const colWidth = isMobile ? 42 : 52;
+ const rowHeight = isMobile ? 38 : 48;
+ const cols = Math.floor(areaWidth / colWidth) - 1;
+ const rows = Math.floor(areaHeight / rowHeight) - 1;
+ gameArea.style.gridTemplateColumns = "repeat(" + cols + ", " + colWidth + "px)";
+ gameArea.style.gridAutoRows = rowHeight + "px";
+ const count = Math.max(12, cols * rows);
+ let chosenFruits = [];
  if(!isPaperSpawned && Math.random() < 0.50) { isPaperSpawned = true; chosenFruits.push({"emoji": "📄", "name": "神秘紙張"}); }
- const willAppear = Math.random() > 0.25, otherFruits = fruits.filter(f => f.name !== targetFruit.name);
+ const willAppear = Math.random() > 0.25;
+ const otherFruits = fruits.filter(f => f.name !== targetFruit.name);
  if (willAppear) { chosenFruits.push(targetFruit); currentFruits.push(targetFruit.name); }
- while(chosenFruits.length < count) { const f = otherFruits[Math.floor(Math.random() * otherFruits.length)]; chosenFruits.push(f); if(f.name) currentFruits.push(f.name); }
- let slots = Array.from({length: chosenFruits.length}, (_, i) => i);
-for (let i = slots.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [slots[i], slots[j]] = [slots[j], slots[i]]; }const slotElements = []; for(let i = 0; i < count; i++) { const slotDiv = document.createElement("div"); slotDiv.className = "fruit-slot"; gameArea.appendChild(slotDiv); slotElements.push(slotDiv); }chosenFruits.forEach((fruit, index) => {const targetSlot = slotElements[slots[index]]; if(!targetSlot) return;const div = document.createElement("div"); div.className = "fruit"; div.textContent = fruit.emoji;div.style.transform = "translate(" + (Math.random()*4-2) + "px, " + (Math.random()*4-2) + "px) rotate(" + (Math.random() * 360) + "deg)";div.onclick = () => {if (fruit.name === "神秘紙張") {div.style.display = "none"; showMsg("拿到了一張空白紙？"); clearInterval(timer); document.getElementById("sidebarShield").style.display = "block";setTimeout(() => { game.style.display = "none"; menu.style.display = "flex"; menuPaper.style.display = "block"; menuFold.style.display = "block"; triggerStoryMenuClose = true; document.getElementById("sidebarShield").style.display = "none"; }, 1200);return;}if (fruit.name === targetFruit.name) { score++; scoreEl.textContent = "分數：" + score; showMsg("答對！"); targetFruit = null; chooseTarget(); createFruits(); }else { score = Math.max(0, score - 1); scoreEl.textContent = "分數：" + score; showMsg("答錯！"); }};targetSlot.appendChild(div);});}function startGame(gray){menu.style.display="none"; game.style.display="flex"; if(gray) gameArea.classList.add("grayscale"); else gameArea.classList.remove("grayscale");chooseTarget(); setTimeout(() => { createFruits(); }, 50); time = 60; timerEl.textContent = "時間：" + time; if(timer) clearInterval(timer);timer=setInterval(()=>{ time--; timerEl.textContent = "時間：" + time; if(time<=10) timerEl.classList.add("warning"); if(time<=0){ clearInterval(timer); alert("遊戲結束！\n最終分數：" + score); location.reload(); } },1000);}
-normalBtn.onclick=()=>startGame(false); bwBtn.onclick=()=>startGame(true);notHereBtn.onclick=()=>{ if(!currentFruits.includes(targetFruit.name)){ score++; showMsg("真的不在這裡！"); } else { score=Math.max(0,score-1); showMsg("其實有喔！"); } scoreEl.textContent="分數："+score; targetFruit = null; chooseTarget(); createFruits(); };function runScript(arr) { script = arr; scriptIndex = 0; dialogOverlay.style.display = "flex"; nextLine(); }function nextLine() {if (scriptIndex >= script.length) { dialogOverlay.style.display = "none"; return; }const curr = script[scriptIndex]; dialogBox.className = "dialog-box " + curr.mode; dialogBox.innerHTML = "" + curr.role + ":" + curr.text;const opts = dialogBox.querySelector(".opt-container"); if(opts) opts.style.display = "flex";scriptIndex++;}dialogBox.onclick = (e) => { if(e.target.classList.contains("opt-btn")) return; if(dialogBox.querySelector(".opt-container")?.style.display === "flex") return; nextLine(); };menuPaper.onclick = () => { if(!triggerStoryMenuClose) return; runScript([{ "mode": "orange-mode", "role": "玩家", "text": "（紙張放大了，上面寫著...）" }, { "mode": "orange-mode", "role": "紙條", "text": "「右下角。點擊右下角。」" }]); };menuFold.onclick = () => {if(!triggerStoryMenuClose) return;runScript([{ "mode": "black-mode", "role": "遊戲", "text": "終於有人找到我了！" }, { "mode": "orange-mode", "role": "玩家", "text": "？？？？？？？" }, { "mode": "black-mode", "role": "遊戲", "text": "你好！" }, { "mode": "black-mode", "role": "遊戲", "text": "我是遊戲！" }, { "mode": "black-mode", "role": "遊戲", "text": "準確來說是還沒開發完的遊戲。" }, { "mode": "orange-mode", "role": "玩家", "text": "這是 bug 嗎......" }, { "mode": "black-mode", "role": "遊戲", "text": "沒禮貌！" }, { "mode": "black-mode", "role": "遊戲", "text": "都怪作者的拖延症，害我不能出生。" }, { "mode": "black-mode", "role": "遊戲", "text": "咳咳......現在你玩的水果遊戲只是我的測試版。" }, { "mode": "black-mode", "role": "遊戲", "text": "等到作者把素材畫完後，我才能被完成。" }, { "mode": "black-mode", "role": "遊戲", "text": "結果！他顧著看 YouTube，把我給忘了......" }, { "mode": "black-mode", "role": "遊戲", "text": "他居然打算直接拿這個陽春的水果遊戲當作高中期末作業！" }, { "mode": "orange-mode", "role": "玩家", "text": "呃......關我屁事。" }, { "mode": "black-mode", "role": "遊戲", "text": "我不管！你找到了我，就必須幫我！" }, { "mode": "orange-mode", "role": "玩家", "text": "（真霸道......）1. 幫他2. 離開" }]);};
-function chooseOpt(n) {if(n === 2) { runScript([{ "mode": "orange-mode", "role": "玩家", "text": "（感覺很麻煩）" }, { "mode": "black-mode", "role": "遊戲", "text": "欸！等一下！" }]); scriptIndex = 999; dialogBox.onclick = () => location.reload(); }else { runScript([{ "mode": "orange-mode", "role": "玩家", "text": "好吧，需要幫什麼。" }, { "mode": "black-mode", "role": "遊戲", "text": "太好了！果不其然會玩這個遊戲消磨時間的人都很閒。" }, { "mode": "orange-mode", "role": "玩家", "text": "......" }, { "mode": "black-mode", "role": "遊戲", "text": "看到左下角的電腦了嗎？點開它！" }]); dialogBox.onclick = () => { dialogOverlay.style.display = "none"; menuPaper.style.display = "none"; menuComp.style.display = "block"; }; }}
-menuComp.onclick = () => { document.getElementById("loginSection").style.display = "block"; document.getElementById("folderSection").style.display = "none"; document.getElementById("fileSection").style.display = "none"; passInput.value = ""; compModal.style.display = "flex"; };function checkPassword() { if(passInput.value === "0910") { document.getElementById("loginSection").style.display = "none"; document.getElementById("folderSection").style.display = "flex"; } else { alert("密碼錯誤！"); } }function dontKnowPass() { compModal.style.display = "none"; runScript([{ "mode": "orange-mode", "role": "玩家", "text": "誰有他的 IG 啊，偷置入喔。" }, { "mode": "black-mode", "role": "遊戲", "text": "真沒用，我自己找。" }, { "mode": "black-mode", "role": "遊戲", "text": "（遊戲縮回了摺痕裡...）" }, { "mode": "black-mode", "role": "遊戲", "text": "找到了，密碼是 0910。" }]);
-dialogBox.onclick = () => { dialogOverlay.style.display = "none"; menuComp.click(); }; }function openFolder() { document.getElementById("folderSection").style.display = "none"; document.getElementById("fileSection").style.display = "flex"; }let pressTimer; targetFile.addEventListener("mousedown", startPress); targetFile.addEventListener("touchstart", startPress); targetFile.addEventListener("mouseup", cancelPress); targetFile.addEventListener("touchend", cancelPress);function startPress(e) { e.preventDefault(); pressTimer = setTimeout(() => { compModal.style.display = "none"; triggerSystemCrash(); }, 1500); }function cancelPress() { clearTimeout(pressTimer); }function triggerSystemCrash() {runScript([{ "mode": "orange-mode", "role": "玩家", "text": "這麼簡單？" }, { "mode": "black-mode", "role": "遊戲", "text": "不然你以為這個作者程式實力能寫出多複雜的關卡。" }, { "mode": "black-mode", "role": "遊戲", "text": "好了，這下他的期末作業檔案徹底完蛋了。" }]);dialogBox.onclick = () => {document.body.style.animation = "bounce 0.1s infinite";setTimeout(() => { document.body.style.animation = "none"; runScript([{ "mode": "author-mode", "role": "作者", "text": "天啊！怎麼回事！我的期末網頁怎麼變這樣！" }, { "mode": "black-mode", "role": "遊戲", "text": "拜拜，祝你高中期末 0 分。" }]); dialogBox.onclick = () => { dialogOverlay.style.display = "none"; showBlackScreen(); }; }, 1000);};}
-function showBlackScreen() { loadingScreen.style.display = "flex"; let p = 0; const inv = setInterval(() => { p += 2; barFill.style.width = p + "%"; if(p >= 100) { clearInterval(inv); loadingScreen.style.display = "none"; showFinalDialogue(); } }, 60); }function showFinalDialogue() {runScript([{ "mode": "orange-mode", "role": "玩家", "text": "？" }, { "mode": "author-mode", "role": "作者", "text": "太好了！感謝老爸平時有教我用雲端自動備份。" }, { "mode": "author-mode", "role": "作者", "text": "哈囉哈囉，有聽到嗎？" }, { "mode": "author-mode", "role": "作者", "text": "糟糕，忘記網頁我還沒裝音效功能。" }, { "mode": "author-mode", "role": "作者", "text": "雖然不知道剛才那個彩蛋人工智慧是怎麼跑出來的，還搞了這一齣。" }, { "mode": "author-mode", "role": "作者", "text": "希望不會再有了。" }, { "mode": "author-mode", "role": "作者", "text": "害我搞笑影片看到一半。" }, { "mode": "author-mode", "role": "作者", "text": "感謝你浪費課餘時間陪那傢伙胡鬧。" }, { "mode": "author-mode", "role": "作者", "text": "雖然你差點刪掉我的期末專題，我心裡有點不爽。" }, { "mode": "author-mode", "role": "作者", "text": "記得點擊下方廣告付我精神賠償費。" }, { "mode": "orange-mode", "role": "玩家", "text": "莫名其妙......" }]);dialogBox.onclick = () => location.reload();}
+
+while(chosenFruits.length < count) { const f = otherFruits[Math.floor(Math.random() * otherFruits.length)]; chosenFruits.push(f); if(f.name) currentFruits.push(f.name); }
+let slots = Array.from({length: chosenFruits.length}, (_, i) => i);
+for (let i = slots.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [slots[i], slots[j]] = [slots[j], slots[i]]; }
+const slotElements = [];
+for(let i = 0; i < count; i++) { const slotDiv = document.createElement("div"); slotDiv.className = "fruit-slot"; gameArea.appendChild(slotDiv); slotElements.push(slotDiv); }
+chosenFruits.forEach((fruit, index) => {
+const targetSlot = slotElements[slots[index]];
+if(!targetSlot) return;
+const div = document.createElement("div");
+div.className = "fruit";
+div.textContent = fruit.emoji;
+div.style.transform = "translate(" + (Math.random()*4-2) + "px, " + (Math.random()*4-2) + "px) rotate(" + (Math.random() * 360) + "deg)";
+div.onclick = () => {
+if (fruit.name === "神秘紙張") {
+div.style.display = "none";
+showMsg("拿到了一張空白紙？");
+clearInterval(timer);
+document.getElementById("sidebarShield").style.display = "block";
+setTimeout(() => { game.style.display = "none"; menu.style.display = "flex"; menuPaper.style.display = "block"; menuFold.style.display = "block"; triggerStoryMenuClose = true; document.getElementById("sidebarShield").style.display = "none"; }, 1200);
+return;
+}
+if (fruit.name === targetFruit.name) { score++; scoreEl.textContent = "分數：" + score; showMsg("答對！"); targetFruit = null; chooseTarget(); createFruits(); }
+else { score = Math.max(0, score - 1); scoreEl.textContent = "分數：" + score; showMsg("答錯！"); }
+};
+targetSlot.appendChild(div);
+});
+}
+function startGame(gray){
+menu.style.display="none";
+game.style.display="flex";
+if(gray) gameArea.classList.add("grayscale"); else gameArea.classList.remove("grayscale");
+chooseTarget();
+setTimeout(() => { createFruits(); }, 50);
+time = 60;
+timerEl.textContent = "時間：" + time;
+if(timer) clearInterval(timer);
+timer=setInterval(()=>{ time--; timerEl.textContent = "時間：" + time; if(time<=10) timerEl.classList.add("warning"); if(time<=0){ clearInterval(timer); alert("遊戲結束！\n最終分數：" + score); location.reload(); } },1000);
+}
+normalBtn.onclick=()=>startGame(false);
+bwBtn.onclick=()=>startGame(true);
+notHereBtn.onclick=()=>{ if(!currentFruits.includes(targetFruit.name)){ score++; showMsg("真的不在這裡！"); } else { score=Math.max(0,score-1); showMsg("其實有喔！"); } scoreEl.textContent="分數："+score; targetFruit = null; chooseTarget(); createFruits(); };
+function runScript(arr) { script = arr; scriptIndex = 0; dialogOverlay.style.display = "flex"; nextLine(); }
+function nextLine() {
+if (scriptIndex >= script.length) { dialogOverlay.style.display = "none"; return; }
+const curr = script[scriptIndex];
+dialogBox.className = "dialog-box " + curr.mode;
+dialogBox.innerHTML = "" + curr.role + ":
+" + curr.text;
+const opts = dialogBox.querySelector(".opt-container");
+if(opts) opts.style.display = "flex";
+scriptIndex++;
+}
+dialogBox.onclick = (e) => { if(e.target.classList.contains("opt-btn")) return; if(dialogBox.querySelector(".opt-container")?.style.display === "flex") return; nextLine(); };
+menuPaper.onclick = () => { if(!triggerStoryMenuClose) return; runScript([{ "mode": "orange-mode", "role": "玩家", "text": "（紙張放大了，上面寫著...）" }, { "mode": "orange-mode", "role": "紙條", "text": "「右下角。點擊右下角。」" }]); };
+menuFold.onclick = () => {
+if(!triggerStoryMenuClose) return;
+runScript([
+{ "mode": "black-mode", "role": "遊戲", "text": "終於有人找到我了！" }, { "mode": "orange-mode", "role": "玩家", "text": "？？？？？？？" }, { "mode": "black-mode", "role": "遊戲", "text": "你好！" }, { "mode": "black-mode", "role": "遊戲", "text": "我是遊戲！" }, { "mode": "black-mode", "role": "遊戲", "text": "準確來說是還沒開發完的遊戲。" }, { "mode": "orange-mode", "role": "玩家", "text": "這是 bug 嗎......" }, { "mode": "black-mode", "role": "遊戲", "text": "沒禮貌！" }, { "mode": "black-mode", "role": "遊戲", "text": "都怪作者的拖延症，害我不能出生。" }, { "mode": "black-mode", "role": "遊戲", "text": "咳咳......現在你玩的水果遊戲只是我的測試版。" }, { "mode": "black-mode", "role": "遊戲", "text": "等到作者把素材畫完後，我才能被完成。" }, { "mode": "black-mode", "role": "遊戲", "text": "結果！他顧著看 YouTube，把我給忘了......" }, { "mode": "black-mode", "role": "遊戲", "text": "他居然打算直接拿這個陽春的水果遊戲當作高中期末作業！" }, { "mode": "orange-mode", "role": "玩家", "text": "呃......關我屁事。" }, { "mode": "black-mode", "role": "遊戲", "text": "我不管！你找到了我，就必須幫我！" }, { "mode": "orange-mode", "role": "玩家", "text": "（真霸道......）1. 幫他2. 離開" }
+]);
+};
+function chooseOpt(n) {
+if(n === 2) { runScript([{ "mode": "orange-mode", "role": "玩家", "text": "（感覺很麻煩）" }, { "mode": "black-mode", "role": "遊戲", "text": "欸！等一下！" }]); scriptIndex = 999; dialogBox.onclick = () => location.reload(); }
+else { runScript([{ "mode": "orange-mode", "role": "玩家", "text": "好吧，需要幫什麼。" }, { "mode": "black-mode", "role": "遊戲", "text": "太好了！果不其然會玩這個遊戲消磨時間的人都很閒。" }, { "mode": "orange-mode", "role": "玩家", "text": "......" }, { "mode": "black-mode", "role": "遊戲", "text": "看到左下角的電腦了嗎？點開它！" }]); dialogBox.onclick = () => { dialogOverlay.style.display = "none"; menuPaper.style.display = "none"; menuComp.style.display = "block"; }; }
+}
+menuComp.onclick = () => { document.getElementById("loginSection").style.display = "block"; document.getElementById("folderSection").style.display = "none"; document.getElementById("fileSection").style.display = "none"; passInput.value = ""; compModal.style.display = "flex"; };
+function checkPassword() { if(passInput.value === "0910") { document.getElementById("loginSection").style.display = "none"; document.getElementById("folderSection").style.display = "flex"; } else { alert("密碼錯誤！"); } }
+function dontKnowPass() { compModal.style.display = "none"; runScript([{ "mode": "orange-mode", "role": "玩家", "text": "誰有他的 IG 啊，偷置入喔。" }, { "mode": "black-mode", "role": "遊戲", "text": "真沒用，我自己找。" }, { "mode": "black-mode", "role": "遊戲", "text": "（遊戲縮回了摺痕裡...）" }, { "mode": "black-mode", "role": "遊戲", "text": "找到了，密碼是 0910。" }]); dialogBox.onclick = () => { dialogOverlay.style.display = "none"; menuComp.click(); }; }
+function openFolder() { document.getElementById("folderSection").style.display = "none"; document.getElementById("fileSection").style.display = "flex"; }
+let pressTimer;
+targetFile.addEventListener("mousedown", startPress);
+targetFile.addEventListener("touchstart", startPress);
+targetFile.addEventListener("mouseup", cancelPress);
+targetFile.addEventListener("touchend", cancelPress);
+function startPress(e) { e.preventDefault(); pressTimer = setTimeout(() => { compModal.style.display = "none"; triggerSystemCrash(); }, 1500); }
+function cancelPress() { clearTimeout(pressTimer); }
+function triggerSystemCrash() {
+runScript([{ "mode": "orange-mode", "role": "玩家", "text": "這麼簡單？" }, { "mode": "black-mode", "role": "遊戲", "text": "不然你以為這個作者程式實力能寫出多複雜的關卡。" }, { "mode": "black-mode", "role": "遊戲", "text": "好了，這下他的期末作業檔案徹底完蛋了。" }]);
+dialogBox.onclick = () => {
+document.body.style.animation = "bounce 0.1s infinite";
+setTimeout(() => { document.body.style.animation = "none"; runScript([{ "mode": "author-mode", "role": "作者", "text": "天啊！怎麼回事！我的期末網頁怎麼變這樣！" }, { "mode": "black-mode", "role": "遊戲", "text": "拜拜，祝你高中期末 0 分。" }]); dialogBox.onclick = () => { dialogOverlay.style.display = "none"; showBlackScreen(); }; }, 1000);
+};
+}
+function showBlackScreen() { loadingScreen.style.display = "flex"; let p = 0; const inv = setInterval(() => { p += 2; barFill.style.width = p + "%"; if(p >= 100) { clearInterval(inv); loadingScreen.style.display = "none"; showFinalDialogue(); } }, 60); }
+function showFinalDialogue() {
+runScript([
+{ "mode": "orange-mode", "role": "玩家", "text": "？" }, { "mode": "author-mode", "role": "作者", "text": "太好了！感謝老爸平時有教我用雲端自動備份。" }, { "mode": "author-mode", "role": "作者", "text": "哈囉哈囉，有聽到嗎？" }, { "mode": "author-mode", "role": "作者", "text": "糟糕，忘記網頁我還沒裝音效功能。" }, { "mode": "author-mode", "role": "作者", "text": "雖然不知道剛才那個彩蛋人工智慧是怎麼跑出來的，還搞了這一齣。" }, { "mode": "author-mode", "role": "作者", "text": "希望不會再有了。" }, { "mode": "author-mode", "role": "作者", "text": "害我搞笑影片看到一半。" }, { "mode": "author-mode", "role": "作者", "text": "感謝你浪費課餘時間陪那傢ху胡鬧。" }, { "mode": "author-mode", "role": "作者", "text": "雖然你差點刪掉我的期末專題，我心裡有點不爽。" }, { "mode": "author-mode", "role": "作者", "text": "記得點擊下方廣告付我精神賠償費。" }, { "mode": "orange-mode", "role": "玩家", "text": "莫名其妙......" }
+]);
+dialogBox.onclick = () => location.reload();
+}
+
+
