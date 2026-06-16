@@ -93,7 +93,7 @@ overflow:hidden;height:100dvh;
  <div id="sidebarShield" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;z-index:100;background:transparent;"></div>
  <div id="gameArea"></div>
 </div>
-<!-- 【第一段指令腳本】：只放核心水果遊戲，放完立即用標籤封閉 -->
+<!-- 【第一段指令腳本】：宣告所有變數與核心遊戲，確保執行創立水果時不會找不到變數而當機 -->
 <script>
 const fruits = [{"emoji":"🍎","name":"蘋果"},{"emoji":"🍏","name":"青蘋果"},{"emoji":"🍌","name":"香蕉"},{"emoji":"🍇","name":"葡萄"},{"emoji":"🍓","name":"草莓"},{"emoji":"🍒","name":"櫻桃"},{"emoji":"🍉","name":"西瓜"},{"emoji":"🍍","name":"鳳梨"},{"emoji":"🥝","name":"奇異果"},{"emoji":"🍑","name":"水蜜桃"},{"emoji":"🍊","name":"橘子"},{"emoji":"🍋","name":"檸檬"},{"emoji":"🥥","name":"椰子"},{"emoji":"🫐","name":"藍莓"},{"emoji":"🍐","name":"梨子"}];
 let score=0, time=60, targetFruit, currentFruits=[], timer, isPaperSpawned=false, triggerStoryMenuClose=false, script=[], scriptIndex=0;
@@ -136,8 +136,6 @@ timer=setInterval(()=>{ time--; timerEl.textContent = "時間：" + time; if(tim
 }
 normalBtn.onclick=()=>startGame(false); bwBtn.onclick=()=>startGame(true);
 notHereBtn.onclick=()=>{ if(!currentFruits.includes(targetFruit.name)){ score++; showMsg("真的不在這裡！"); } else { score=Math.max(0,score-1); showMsg("其實有喔！"); } scoreEl.textContent="分數："+score; targetFruit = null; chooseTarget(); createFruits(); };
-</script>
-<script>
 function runScript(arr) { script = arr; scriptIndex = 0; dialogOverlay.style.display = "flex"; nextLine(); }
 function nextLine() {
 if (scriptIndex >= script.length) { dialogOverlay.style.display = "none"; return; }
@@ -146,6 +144,8 @@ const curr = script[scriptIndex]; dialogBox.className = "dialog-box " + curr.mod
 const opts = dialogBox.querySelector(".opt-container"); if(opts) opts.style.display = "flex";
 scriptIndex++;
 }
+
+
 dialogBox.onclick = (e) => { if(e.target.classList.contains("opt-btn")) return; if(dialogBox.querySelector(".opt-container")?.style.display === "flex") return; nextLine(); };
 menuPaper.onclick = () => { if(!triggerStoryMenuClose) return; runScript([{ "mode": "orange-mode", "role": "玩家", "text": "（紙張放大了，上面寫著...）" }, { "mode": "orange-mode", "role": "紙條", "text": "「右下角。點擊右下角。」" }]); };
 menuFold.onclick = () => {
@@ -179,4 +179,5 @@ runScript([
 ]);
 dialogBox.onclick = () => location.reload();
 }
-</script>
+
+
