@@ -136,8 +136,8 @@ timer=setInterval(()=>{ time--; timerEl.textContent = "時間：" + time; if(tim
 }
 normalBtn.onclick=()=>startGame(false); bwBtn.onclick=()=>startGame(true);
 notHereBtn.onclick=()=>{ if(!currentFruits.includes(targetFruit.name)){ score++; showMsg("真的不在這裡！"); } else { score=Math.max(0,score-1); showMsg("其實有喔！"); } scoreEl.textContent="分數："+score; targetFruit = null; chooseTarget(); createFruits(); };
-
-
+</script>
+<script>
 function runScript(arr) { script = arr; scriptIndex = 0; dialogOverlay.style.display = "flex"; nextLine(); }
 function nextLine() {
 if (scriptIndex >= script.length) { dialogOverlay.style.display = "none"; return; }
